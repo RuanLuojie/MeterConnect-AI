@@ -1,0 +1,6 @@
+@_3dfamilyApi_HostAddress = http://localhost:5277
+
+GET {{_3dfamilyApi_HostAddress}}/ThreeDfamily/
+Accept: application/json
+
+###
