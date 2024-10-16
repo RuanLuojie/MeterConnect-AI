@@ -1,0 +1,28 @@
+name: vision_grid
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.19.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  camera: ^0.10.0+4  # 用於攝影機功能
+  image: ^4.0.15
+  provider: ^6.0.0
+  logger: ^1.0.0
+  image_picker: ^0.8.7+4  # 用於選擇圖片
+  http: ^1.2.2  # 用於 API 請求
+  permission_handler: ^11.3.1
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
