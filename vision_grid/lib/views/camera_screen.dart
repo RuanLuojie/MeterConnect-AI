@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:provider/provider.dart';
 import 'dart:typed_data';
-import 'dart:convert';
 import '../models/camera_service.dart';
 import '../viewmodels/camera_viewmodel.dart';
 
@@ -12,6 +11,10 @@ class CameraScreen extends StatefulWidget {
 }
 
 class _CameraScreenState extends State<CameraScreen> {
+  bool _isUploading = false;
+  String _uploadMessage = '';
+  String? recognizedText;
+
   @override
   void initState() {
     super.initState();
@@ -29,7 +32,6 @@ class _CameraScreenState extends State<CameraScreen> {
       appBar: AppBar(title: Text("Camera")),
       body: Consumer<CameraViewModel>(
         builder: (context, viewModel, child) {
-          // 確保 `initializeControllerFuture` 被正確初始化
           if (viewModel.initializeControllerFuture == null) {
             return Center(child: CircularProgressIndicator());
           }
@@ -47,7 +49,6 @@ class _CameraScreenState extends State<CameraScreen> {
                       },
                       child: CameraPreview(viewModel.controller),
                     ),
-                    // 添加對準框
                     Align(
                       alignment: Alignment.center,
                       child: CustomPaint(
@@ -55,26 +56,24 @@ class _CameraScreenState extends State<CameraScreen> {
                         painter: RectPainter(),
                       ),
                     ),
-                    // 在對準框上方顯示文本
                     Align(
                       alignment: Alignment.center,
                       child: Padding(
-                        padding: const EdgeInsets.only(bottom: 50), // 調整文本位置
+                        padding: const EdgeInsets.only(bottom: 50),
                         child: Text(
                           '請將方框對準數字錶盤',
                           style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
                       ),
                     ),
-                    // 拍照按鈕
                     Positioned(
                       bottom: 60,
                       left: MediaQuery.of(context).size.width / 2 - 30,
                       child: FloatingActionButton(
                         onPressed: () async {
                           setState(() {
-                            _isUploading = false; // 恢復按鈕狀態
-                            _uploadMessage = ''; // 清空錯誤信息
+                            _isUploading = false;
+                            _uploadMessage = '';
                           });
                           Uint8List? imageData = await viewModel.capturePhoto();
                           if (imageData != null) {
@@ -83,10 +82,10 @@ class _CameraScreenState extends State<CameraScreen> {
                         },
                         child: const Icon(
                           Icons.camera_alt,
-                          size: 40, // 調整圖標大小
+                          size: 40,
                         ),
                         backgroundColor: Colors.white,
-                        foregroundColor: Colors.black, // 加入相機圖案
+                        foregroundColor: Colors.black,
                       ),
                     ),
                   ],
@@ -103,100 +102,98 @@ class _CameraScreenState extends State<CameraScreen> {
     );
   }
 
-  // 添加狀態變量來追踪上傳狀態
-  bool _isUploading = false;
-  String _uploadMessage = '';
-
   void _showCapturedImage(BuildContext parentContext, Uint8List imageData) {
+    // 重置狀態
+    setState(() {
+      _isUploading = true; // 開始上傳/辨識
+      recognizedText = null; // 清空上次的辨識結果
+    });
+
     showDialog(
       context: parentContext,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15), // 设置弹出视窗的圆角
-              ),
-              child: Container(
-                width: 300, // 设置弹出视窗宽度
-                height: 400, // 设置弹出视窗高度
-                padding: EdgeInsets.all(10),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 使用 ClipRRect 来实现图片的圆角
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        width: 250, // 设置图片的宽度
-                        height: 250, // 设置图片的高度
-                        child: Image.memory(
-                          imageData,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    _isUploading
-                        ? Column(
-                      children: [
-                        CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white70), // 设置颜色
-                          strokeWidth: 3.0, // 设置转圈的宽度
-                        ),
-                        SizedBox(height: 10),
-                        Text(_uploadMessage), // 显示上传信息
-                      ],
-                    )
-                        : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () async {
-                            setState(() {
-                              _isUploading = true;
-                              _uploadMessage = '正在上傳...';
-                            });
-
-                            // 执行上传
-                            bool success = await Provider.of<CameraViewModel>(parentContext, listen: false)
-                                .uploadImageToServer(imageData);
-
-                            // 上传成功或失败的处理
-                            if (success) {
-                              setState(() {
-                                _uploadMessage = '上傳成功！';
-                              });
-                              // 延迟 2 秒后关闭对话框
-                              await Future.delayed(Duration(seconds: 2));
-                              Navigator.of(context).pop();
-                            } else {
-                              setState(() {
-                                _uploadMessage = '上傳失敗，請稍後重试';
-                              });
-                              // 保留失败信息 2 秒后再切回初始状态
-                              await Future.delayed(Duration(seconds: 2));
-                              Navigator.of(context).pop();
-                            }
-                          },
-                          child: Text('確認'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // 关闭视窗
-                          },
-                          child: Text('取消'),
-                        ),
-                      ],
-                    ),
-                  ],
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Container(
+            width: 300,
+            constraints: BoxConstraints(maxHeight: 400), // 限制對話框高度
+            padding: EdgeInsets.all(10),
+            child: ListView( // 使用 ListView 替代 Column
+              shrinkWrap: true,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    width: 250,
+                    height: 250,
+                    child: Image.memory(imageData),
+                  ),
                 ),
-              ),
-            );
-          },
+                SizedBox(height: 20),
+                if (recognizedText != null)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "辨識結果: $recognizedText",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                if (_isUploading)
+                  Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                      strokeWidth: 3.0,
+                    ),
+                  ),
+                if (!_isUploading && recognizedText != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () async {
+                          // 確認按鈕的邏輯
+                        },
+                        child: Text('確認'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('取消'),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
         );
       },
     );
+
+    // 調用 AI 辨識方法
+    _recognizeTextWithAI(parentContext, imageData);
+    print('辨識過程中出現錯誤:');
   }
+
+  Future<void> _recognizeTextWithAI(BuildContext context, Uint8List imageData) async {
+    final cameraViewModel = Provider.of<CameraViewModel>(context, listen: false);
+    try {
+      final result = await cameraViewModel.recognizeNumber(imageData);
+      setState(() {
+        _isUploading = false;
+        recognizedText = result ?? "無法辨識數字"; // 防止空值
+      });
+    } catch (e) {
+      print('辨識過程中出現錯誤: $e');
+      setState(() {
+        _isUploading = false;
+        recognizedText = '辨識失敗';
+      });
+    }
+  }
+
 
 }
 

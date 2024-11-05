@@ -1,8 +1,8 @@
-// 在 HomeScreen 中
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // 新增
+import 'package:provider/provider.dart';
 import 'camera_screen.dart';
-import '../viewmodels/camera_viewmodel.dart'; // 新增
+import '../viewmodels/camera_viewmodel.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -21,29 +21,40 @@ class HomeScreen extends StatelessWidget {
           ),
           itemCount: 3, // 三個按鈕
           itemBuilder: (context, index) {
-            return index == 0
-                ? ElevatedButton.icon(
-              onPressed: () {
-                // 包裝 `CameraScreen` 與 `Provider`
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChangeNotifierProvider(
-                      create: (context) => CameraViewModel(),
-                      child: CameraScreen(),
+            if (index == 0) {
+              return ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChangeNotifierProvider(
+                        create: (context) => CameraViewModel(),
+                        child: CameraScreen(),
+                      ),
                     ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.camera_alt),
-              label: const Text('相機'),
-            )
-                : ElevatedButton(
-              onPressed: () {
-                // 其他按鈕的功能
-              },
-              child: Text('按鈕 ${index + 1}'),
-            );
+                  );
+                },
+                icon: const Icon(Icons.camera_alt),
+                label: const Text('相機'),
+              );
+            } else if (index == 1) {
+              return ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SettingsScreen()),
+                  );
+                },
+                child: const Text('設定'),
+              );
+            } else {
+              return ElevatedButton(
+                onPressed: () {
+                  // 第三個按鈕的功能
+                },
+                child: Text('按鈕 ${index + 1}'),
+              );
+            }
           },
         ),
       ),
