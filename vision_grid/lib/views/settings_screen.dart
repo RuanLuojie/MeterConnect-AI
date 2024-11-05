@@ -8,17 +8,19 @@ class SettingsScreen extends StatelessWidget {
     final settings = Provider.of<SettingsViewModel>(context);
     return Scaffold(
       appBar: AppBar(title: Text('Settings')),
-      body: Padding(
+      body: SingleChildScrollView( // 使用 SingleChildScrollView 包裹
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            // SQL API URL
             TextField(
               cursorColor: Colors.white,
               controller: TextEditingController(text: settings.apiUrl),
-              decoration: InputDecoration(labelText: 'API URL'),
+              decoration: InputDecoration(labelText: 'SQL API URL'),
               onChanged: (value) => settings.setApiUrl(value),
             ),
             SizedBox(height: 16),
+            // Database User
             TextField(
               cursorColor: Colors.white,
               controller: TextEditingController(text: settings.dbUser),
@@ -26,27 +28,57 @@ class SettingsScreen extends StatelessWidget {
               onChanged: (value) => settings.setDbUser(value),
             ),
             SizedBox(height: 16),
+            // Database Password with eye button
             TextField(
               cursorColor: Colors.white,
               controller: TextEditingController(text: settings.dbPassword),
-              decoration: InputDecoration(labelText: 'Database Password'),
-              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Database Password',
+                suffixIcon: IconButton(
+                  icon: Icon(settings.isDbPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                  onPressed: settings.toggleDbPasswordVisibility,
+                ),
+              ),
+              obscureText: !settings.isDbPasswordVisible,
               onChanged: (value) => settings.setDbPassword(value),
             ),
             SizedBox(height: 16),
+            // OpenAI API URL
+            TextField(
+              cursorColor: Colors.white,
+              controller: TextEditingController(text: settings.openAiApiUrl),
+              decoration: InputDecoration(labelText: 'OpenAI API URL'),
+              onChanged: (value) => settings.setOpenAiApiUrl(value),
+            ),
+            SizedBox(height: 16),
+            // OpenAI API Key with eye button
+            TextField(
+              cursorColor: Colors.white,
+              controller: TextEditingController(text: settings.openAiApiKey),
+              decoration: InputDecoration(
+                labelText: 'OpenAI API Key',
+                suffixIcon: IconButton(
+                  icon: Icon(settings.isOpenAiKeyVisible ? Icons.visibility : Icons.visibility_off),
+                  onPressed: settings.toggleOpenAiKeyVisibility,
+                ),
+              ),
+              obscureText: !settings.isOpenAiKeyVisible,
+              onChanged: (value) => settings.setOpenAiApiKey(value),
+            ),
+            SizedBox(height: 16),
+            // Remember settings checkbox
             CheckboxListTile(
               title: Text("記住設定"),
-              activeColor: Colors.white, // 設定選中的顏色為白色
-              // checkColor: Colors.black, // 設置勾選標記為黑色（可選）
+              activeColor: Colors.white,
               value: settings.rememberSettings,
               onChanged: (bool? value) {
                 settings.setRememberSettings(value ?? false);
               },
             ),
-
           ],
         ),
       ),
     );
   }
+
 }

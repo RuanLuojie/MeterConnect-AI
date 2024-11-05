@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:camera/camera.dart';
 import '../models/camera_service.dart';
+import '../models/openai_service.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/settings_viewmodel.dart';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'dart:convert';
@@ -9,18 +12,17 @@ import '../models/openai_service.dart';
 
 class CameraViewModel extends ChangeNotifier {
   late CameraController _controller;
-  late OpenAIService _openAIService;
+  final OpenAIService _openAIService = OpenAIService();
   String? recognizedText;
 
-  CameraViewModel() {
-    _openAIService = OpenAIService();
-  }
-
-  // 修改這裡的返回類型為 Future<String?>，並返回辨識結果
-  Future<String?> recognizeNumber(Uint8List imageData) async {
-    recognizedText = await _openAIService.recognizeNumber(imageData);
-    notifyListeners(); // 更新視圖以顯示辨識結果
-    return recognizedText; // 返回辨識結果
+  Future<String?> recognizeNumber(Uint8List imageData, BuildContext context) async {
+    // 确保已导入 SettingsViewModel
+    final settings = Provider.of<SettingsViewModel>(context, listen: false);
+    return await _openAIService.recognizeNumber(
+      imageData,
+      settings.openAiApiUrl,
+      settings.openAiApiKey,
+    );
   }
 
   Future<void>? initializeControllerFuture;

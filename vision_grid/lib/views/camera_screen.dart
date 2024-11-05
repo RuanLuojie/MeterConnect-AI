@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:provider/provider.dart';
 import 'dart:typed_data';
-import '../models/camera_service.dart';
+
 import '../viewmodels/camera_viewmodel.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -116,78 +116,82 @@ class _CameraScreenState extends State<CameraScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Container(
-            width: 300,
-            constraints: BoxConstraints(maxHeight: 400), // 限制對話框高度
-            padding: EdgeInsets.all(10),
-            child: ListView( // 使用 ListView 替代 Column
-              shrinkWrap: true,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    width: 250,
-                    height: 250,
-                    child: Image.memory(imageData),
-                  ),
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter dialogSetState) {
+              // 在這裡調用 `_recognizeTextWithAI` 方法，並將 `dialogSetState` 傳遞給它
+              _recognizeTextWithAI(parentContext, imageData, dialogSetState);
+
+              return Container(
+                width: 300,
+                constraints: BoxConstraints(maxHeight: 400), // 限制對話框高度
+                padding: EdgeInsets.all(10),
+                child: ListView( // 使用 ListView 替代 Column
+                  shrinkWrap: true,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        width: 250,
+                        height: 250,
+                        child: Image.memory(imageData),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    if (recognizedText != null)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          "辨識結果: $recognizedText",
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    if (_isUploading)
+                      Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                          strokeWidth: 3.0,
+                        ),
+                      ),
+                    if (!_isUploading && recognizedText != null)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () async {
+                              // 確認按鈕的邏輯
+                            },
+                            child: Text('確認'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text('取消'),
+                          ),
+                        ],
+                      ),
+                  ],
                 ),
-                SizedBox(height: 20),
-                if (recognizedText != null)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      "辨識結果: $recognizedText",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                if (_isUploading)
-                  Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
-                      strokeWidth: 3.0,
-                    ),
-                  ),
-                if (!_isUploading && recognizedText != null)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () async {
-                          // 確認按鈕的邏輯
-                        },
-                        child: Text('確認'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Text('取消'),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
+              );
+            },
           ),
         );
       },
     );
-
-    // 調用 AI 辨識方法
-    _recognizeTextWithAI(parentContext, imageData);
-    print('辨識過程中出現錯誤:');
   }
 
-  Future<void> _recognizeTextWithAI(BuildContext context, Uint8List imageData) async {
+  Future<void> _recognizeTextWithAI(BuildContext context, Uint8List imageData, StateSetter dialogSetState) async {
     final cameraViewModel = Provider.of<CameraViewModel>(context, listen: false);
     try {
-      final result = await cameraViewModel.recognizeNumber(imageData);
-      setState(() {
+      // 传入 imageData 和 context 两个参数
+      final result = await cameraViewModel.recognizeNumber(imageData, context);
+      dialogSetState(() { // 使用Dialog的setState
         _isUploading = false;
         recognizedText = result ?? "無法辨識數字"; // 防止空值
       });
     } catch (e) {
       print('辨識過程中出現錯誤: $e');
-      setState(() {
+      dialogSetState(() {
         _isUploading = false;
         recognizedText = '辨識失敗';
       });
