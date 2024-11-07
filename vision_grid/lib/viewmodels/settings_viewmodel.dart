@@ -17,10 +17,10 @@ class SettingsViewModel extends ChangeNotifier {
 
   // Getters
   String get apiUrl => _rememberSettings ? _apiUrl : "https://sql-server.fly.dev/execute";
-  String get dbUser => _rememberSettings ? _dbUser : "roger";
-  String get dbPassword => _rememberSettings ? _dbPassword : "Asdffhgeg1134!";
+  String get dbUser => _rememberSettings ? _dbUser : "";
+  String get dbPassword => _rememberSettings ? _dbPassword : "";
   String get openAiApiUrl => _rememberSettings ? _openAiApiUrl : "https://api.openai.com/v1/chat/completions";
-  String get openAiApiKey => _rememberSettings ? _openAiApiKey : "sk-None-k30bCJqYi0WII8omCt9DT3BlbkFJPBCd4VLFvrQ3hXW02fBE";
+  String get openAiApiKey => _rememberSettings ? _openAiApiKey : "";
   bool get rememberSettings => _rememberSettings;
   bool get isDbPasswordVisible => _isDbPasswordVisible;
   bool get isOpenAiKeyVisible => _isOpenAiKeyVisible;
@@ -87,10 +87,10 @@ class SettingsViewModel extends ChangeNotifier {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     _apiUrl = prefs.getString('apiUrl') ?? "https://sql-server.fly.dev/execute";
-    _dbUser = prefs.getString('dbUser') ?? "roger";
-    _dbPassword = prefs.getString('dbPassword') ?? "Asdffhgeg1134!";
+    _dbUser = prefs.getString('dbUser') ?? "";
+    _dbPassword = prefs.getString('dbPassword') ?? "";
     _openAiApiUrl = prefs.getString('openAiApiUrl') ?? "https://api.openai.com/v1/chat/completions";
-    _openAiApiKey = prefs.getString('openAiApiKey') ?? "sk-None-k30bCJqYi0WII8omCt9DT3BlbkFJPBCd4VLFvrQ3hXW02fBE";
+    _openAiApiKey = prefs.getString('openAiApiKey') ?? "";
     _rememberSettings = prefs.getBool('rememberSettings') ?? false;
     notifyListeners();
   }
