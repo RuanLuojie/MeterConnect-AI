@@ -3,10 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsViewModel extends ChangeNotifier {
   String _apiUrl = "https://sql-server.fly.dev/execute";
-  String _dbUser = "roger";
-  String _dbPassword = "Asdffhgeg1134!";
+  String _dbUser = "";
+  String _dbPassword = "";
   String _openAiApiUrl = "https://api.openai.com/v1/chat/completions";
-  String _openAiApiKey = "sk-None-k30bCJqYi0WII8omCt9DT3BlbkFJPBCd4VLFvrQ3hXW02fBE";
+  String _openAiApiKey = "";
   bool _rememberSettings = false;
   bool _isDbPasswordVisible = false;
   bool _isOpenAiKeyVisible = false;
