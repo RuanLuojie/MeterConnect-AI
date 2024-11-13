@@ -8,7 +8,6 @@
 - **智能拍照辨識**：自動識別電表讀數，減少人為錯誤。
 - **雲端數據同步**：即時將讀數上傳至安全的雲端資料庫。
 - **即時數據查詢**：隨時隨地通過手機或網頁查看電表數據。
-- **API串接**：提供穩定的 ASP.NET Web API，支持多平台整合。
 - **數據分析與報告**：生成詳細的用電報告，幫助用戶更好地管理能源消耗。
 
 **英文描述：**
@@ -19,7 +18,6 @@
 - **Smart Photo Recognition**: Automatically identifies meter readings, minimizing human errors.
 - **Cloud Data Sync**: Instantly uploads readings to a secure cloud database.
 - **Real-Time Data Access**: View meter data anytime, anywhere via mobile or web platforms.
-- **API Integration**: Offers a robust ASP.NET Web API for multi-platform integration.
 - **Data Analytics & Reporting**: Generates detailed energy consumption reports to help users manage their usage effectively.
 
 ---
