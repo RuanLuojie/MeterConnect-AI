@@ -18,15 +18,8 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllerRoute(
-    name: "GuidRoute",
-    pattern: "{id:guid}",
-    defaults: new { controller = "Home", action = "RedirectToGuid" }
-);
-
-app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Home}/{id?}"
 );
-
 
 app.Run();
