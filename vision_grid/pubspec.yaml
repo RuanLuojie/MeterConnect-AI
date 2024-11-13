@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   camera: ^0.10.0+4  # 用於攝影機功能
   image: ^4.0.15
   provider: ^6.0.0
@@ -27,3 +28,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/vision_grid.png

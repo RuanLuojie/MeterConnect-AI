@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'views/home_screen.dart';
 import 'views/themes.dart';
 import 'viewmodels/settings_viewmodel.dart';
+import 'login_screen.dart';
 
 void main() {
   runApp(
@@ -22,7 +23,11 @@ class MyApp extends StatelessWidget {
       title: 'Vision Grid',
       debugShowCheckedModeBanner: false,
       theme: AppThemes.darkTheme,
-      home: HomeScreen(),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => LoginScreen(),
+        '/home': (context) => HomeScreen(),
+      },
     );
   }
 }

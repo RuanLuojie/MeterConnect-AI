@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'camera_screen.dart';
 import '../viewmodels/camera_viewmodel.dart';
 import 'settings_screen.dart';
+import '../login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -10,6 +11,18 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Vision Grid'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () {
+              // 導航回登入頁面並清除返回堆疊
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -47,14 +60,8 @@ class HomeScreen extends StatelessWidget {
                 },
                 child: const Text('設定'),
               );
-            } else {
-              return ElevatedButton(
-                onPressed: () {
-                  // 第三個按鈕的功能
-                },
-                child: Text('按鈕 ${index + 1}'),
-              );
             }
+
           },
         ),
       ),

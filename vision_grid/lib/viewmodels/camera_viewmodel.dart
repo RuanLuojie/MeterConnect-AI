@@ -8,7 +8,6 @@ import '../viewmodels/settings_viewmodel.dart';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'dart:convert';
-import '../models/openai_service.dart';
 
 class CameraViewModel extends ChangeNotifier {
   late CameraController _controller;

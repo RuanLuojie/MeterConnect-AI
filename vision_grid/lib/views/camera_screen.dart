@@ -103,12 +103,6 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   void _showCapturedImage(BuildContext parentContext, Uint8List imageData) {
-    // 重置狀態
-    setState(() {
-      _isUploading = true; // 開始上傳/辨識
-      recognizedText = null; // 清空上次的辨識結果
-    });
-
     showDialog(
       context: parentContext,
       builder: (BuildContext context) {
@@ -116,64 +110,9 @@ class _CameraScreenState extends State<CameraScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          child: StatefulBuilder(
-            builder: (BuildContext context, StateSetter dialogSetState) {
-              // 在這裡調用 `_recognizeTextWithAI` 方法，並將 `dialogSetState` 傳遞給它
-              _recognizeTextWithAI(parentContext, imageData, dialogSetState);
-
-              return Container(
-                width: 300,
-                constraints: BoxConstraints(maxHeight: 400), // 限制對話框高度
-                padding: EdgeInsets.all(10),
-                child: ListView( // 使用 ListView 替代 Column
-                  shrinkWrap: true,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        width: 250,
-                        height: 250,
-                        child: Image.memory(imageData),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    if (recognizedText != null)
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          "辨識結果: $recognizedText",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    if (_isUploading)
-                      Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
-                          strokeWidth: 3.0,
-                        ),
-                      ),
-                    if (!_isUploading && recognizedText != null)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () async {
-                              // 確認按鈕的邏輯
-                            },
-                            child: Text('確認'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: Text('取消'),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              );
-            },
+          child: CapturedImageDialogContent(
+            imageData: imageData,
+            parentContext: parentContext,
           ),
         );
       },
@@ -183,7 +122,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _recognizeTextWithAI(BuildContext context, Uint8List imageData, StateSetter dialogSetState) async {
     final cameraViewModel = Provider.of<CameraViewModel>(context, listen: false);
     try {
-      // 传入 imageData 和 context 两个参数
+      // 傳入 imageData 和 context 兩個參數
       final result = await cameraViewModel.recognizeNumber(imageData, context);
       dialogSetState(() { // 使用Dialog的setState
         _isUploading = false;
@@ -197,7 +136,6 @@ class _CameraScreenState extends State<CameraScreen> {
       });
     }
   }
-
 
 }
 
@@ -264,4 +202,95 @@ class RectPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+class CapturedImageDialogContent extends StatefulWidget {
+  final Uint8List imageData;
+  final BuildContext parentContext;
+
+  CapturedImageDialogContent({required this.imageData, required this.parentContext});
+
+  @override
+  _CapturedImageDialogContentState createState() => _CapturedImageDialogContentState();
+}
+
+class _CapturedImageDialogContentState extends State<CapturedImageDialogContent> {
+  bool _isUploading = true;
+  String? recognizedText;
+
+  @override
+  void initState() {
+    super.initState();
+    _recognizeTextWithAI();
+  }
+
+  Future<void> _recognizeTextWithAI() async {
+    final cameraViewModel = Provider.of<CameraViewModel>(widget.parentContext, listen: false);
+    try {
+      final result = await cameraViewModel.recognizeNumber(widget.imageData, widget.parentContext);
+      setState(() {
+        _isUploading = false;
+        recognizedText = result ?? "無法辨識數字";
+      });
+    } catch (e) {
+      print('辨識過程中出現錯誤: $e');
+      setState(() {
+        _isUploading = false;
+        recognizedText = '辨識失敗';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 300,
+      constraints: BoxConstraints(maxHeight: 400),
+      padding: EdgeInsets.all(10),
+      child: ListView(
+        shrinkWrap: true,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: 250,
+              height: 250,
+              child: Image.memory(widget.imageData),
+            ),
+          ),
+          SizedBox(height: 20),
+          if (recognizedText != null)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "辨識結果: $recognizedText",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          if (_isUploading)
+            Center(
+              child: CircularProgressIndicator(),
+            ),
+          if (!_isUploading && recognizedText != null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    // 確認按鈕的邏輯
+                  },
+                  child: Text('確認'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('取消'),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
 }
