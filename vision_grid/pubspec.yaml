@@ -19,6 +19,7 @@ dependencies:
   permission_handler: ^11.3.1
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.0.11
+  smooth_page_indicator: ^1.0.0
 
 dev_dependencies:
   flutter_test:
@@ -30,3 +31,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/vision_grid.png
+    - assets/images/promo1.webp
+    - assets/images/promo2.webp
+    - assets/images/promo3.webp
+    - assets/images/promo4.webp

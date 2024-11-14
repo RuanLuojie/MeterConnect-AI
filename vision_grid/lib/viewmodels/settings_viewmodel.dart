@@ -16,11 +16,11 @@ class SettingsViewModel extends ChangeNotifier {
   }
 
   // Getters
-  String get apiUrl => _rememberSettings ? _apiUrl : "https://sql-server.fly.dev/execute";
-  String get dbUser => _rememberSettings ? _dbUser : "";
-  String get dbPassword => _rememberSettings ? _dbPassword : "";
-  String get openAiApiUrl => _rememberSettings ? _openAiApiUrl : "https://api.openai.com/v1/chat/completions";
-  String get openAiApiKey => _rememberSettings ? _openAiApiKey : "";
+  String get apiUrl => _apiUrl;
+  String get dbUser => _dbUser;
+  String get dbPassword => _dbPassword;
+  String get openAiApiUrl => _openAiApiUrl;
+  String get openAiApiKey => _openAiApiKey;
   bool get rememberSettings => _rememberSettings;
   bool get isDbPasswordVisible => _isDbPasswordVisible;
   bool get isOpenAiKeyVisible => _isOpenAiKeyVisible;
@@ -86,7 +86,7 @@ class SettingsViewModel extends ChangeNotifier {
   // 从 SharedPreferences 加载设置
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    _apiUrl = prefs.getString('apiUrl') ?? "https://sql-server.fly.dev/execute";
+    _apiUrl = prefs.getString('apiUrl') ?? "https://sql-sever-v3api.fly.dev/api/SqlApi/dev-execute";
     _dbUser = prefs.getString('dbUser') ?? "";
     _dbPassword = prefs.getString('dbPassword') ?? "";
     _openAiApiUrl = prefs.getString('openAiApiUrl') ?? "https://api.openai.com/v1/chat/completions";

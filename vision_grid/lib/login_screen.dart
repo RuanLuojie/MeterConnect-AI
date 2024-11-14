@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -7,41 +9,32 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  bool _isPasswordVisible = false;
-  bool _rememberPassword = false;
+  final TextEditingController _apiKeyController = TextEditingController();
+  bool _rememberApiKey = false;
+  bool _isLoading = false; // 用於顯示載入狀態
 
   @override
   void initState() {
     super.initState();
-    _loadSavedCredentials();
+    _loadSavedApiKey();
   }
 
-  // 加載已保存的用戶名和密碼
-  Future<void> _loadSavedCredentials() async {
+  Future<void> _loadSavedApiKey() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _rememberPassword = prefs.getBool('rememberPassword') ?? false;
-      if (_rememberPassword) {
-        _usernameController.text = prefs.getString('username') ?? '';
-        _passwordController.text = prefs.getString('password') ?? '';
+      _rememberApiKey = prefs.getBool('rememberApiKey') ?? false;
+      if (_rememberApiKey) {
+        _apiKeyController.text = prefs.getString('apiKey') ?? '';
       }
     });
   }
 
-  // 保存用戶名和密碼
-  Future<void> _saveCredentials() async {
+  Future<void> _saveApiKeyAndUserData(String apiKey, String dbUser, String dbPassword) async {
     final prefs = await SharedPreferences.getInstance();
-    if (_rememberPassword) {
-      await prefs.setString('username', _usernameController.text);
-      await prefs.setString('password', _passwordController.text);
-      await prefs.setBool('rememberPassword', true);
-    } else {
-      await prefs.remove('username');
-      await prefs.remove('password');
-      await prefs.setBool('rememberPassword', false);
-    }
+    await prefs.setString('apiKey', apiKey);
+    await prefs.setString('dbUser', dbUser);
+    await prefs.setString('dbPassword', dbPassword);
+    await prefs.setBool('rememberApiKey', _rememberApiKey);
   }
 
   @override
@@ -62,11 +55,11 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 32),
 
-              // Username TextField
+              // API Key TextField
               TextField(
-                controller: _usernameController,
+                controller: _apiKeyController,
                 decoration: InputDecoration(
-                  labelText: 'Username',
+                  labelText: 'API Key',
                   labelStyle: TextStyle(color: Colors.grey),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -81,52 +74,23 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 16),
 
-              // Password TextField
-              TextField(
-                controller: _passwordController,
-                obscureText: !_isPasswordVisible,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  labelStyle: TextStyle(color: Colors.grey),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey),
-                  ),
-                  floatingLabelStyle: TextStyle(color: Colors.white),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.grey,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
-
-              // Remember Password Checkbox
+              // Remember API Key Checkbox
               CheckboxListTile(
-                title: Text("Remember Password"),
-                value: _rememberPassword,
+                title: Text("記住 API Key"),
+                value: _rememberApiKey,
                 activeColor: Colors.white,
                 onChanged: (bool? value) {
                   setState(() {
-                    _rememberPassword = value ?? false;
+                    _rememberApiKey = value ?? false;
                   });
                 },
               ),
               SizedBox(height: 24),
 
               // Login Button
-              ElevatedButton(
+              _isLoading
+                  ? CircularProgressIndicator() // 顯示載入進度指示器
+                  : ElevatedButton(
                 onPressed: () {
                   _handleLogin();
                 },
@@ -145,24 +109,65 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _handleLogin() {
-    final username = _usernameController.text;
-    final password = _passwordController.text;
+  Future<void> _handleLogin() async {
+    final apiKey = _apiKeyController.text;
 
-    if (username.isNotEmpty && password.isNotEmpty) {
-      _saveCredentials(); // 保存或清除登入信息
-      Navigator.pushReplacementNamed(context, '/home');
+    if (apiKey.isNotEmpty) {
+      setState(() {
+        _isLoading = true; // 開始載入狀態
+      });
+
+      // 呼叫伺服器 API 驗證並取得用戶資訊
+      final userInfo = await _verifyApiKeyAndGetUserInfo(apiKey);
+
+      setState(() {
+        _isLoading = false; // 結束載入狀態
+      });
+
+      if (userInfo != null) {
+        // 儲存 API Key 和用戶資料
+        await _saveApiKeyAndUserData(apiKey, userInfo['username'], userInfo['password']);
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid API Key. Please try again.')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter both username and password')),
+        SnackBar(content: Text('Please enter your API Key')),
       );
+    }
+  }
+
+  Future<Map<String, dynamic>?> _verifyApiKeyAndGetUserInfo(String apiKey) async {
+    // 替換為實際的 API 驗證端點
+    final url = Uri.parse("https://sql-sever-v3api.fly.dev/api/SqlApi/user-info");
+
+    try {
+      final response = await http.get(url, headers: {
+        'X-API-KEY': apiKey,
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'username': data['username'],
+          'password': data['password'],
+          'database': data['database'],
+        };
+      } else {
+        return null; // 驗證失敗
+      }
+    } catch (e) {
+      print('API 驗證失敗: $e');
+      return null;
     }
   }
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
+    _apiKeyController.dispose();
     super.dispose();
   }
 }

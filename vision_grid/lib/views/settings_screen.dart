@@ -47,7 +47,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             // SQL API URL
             TextField(
-              cursorColor: Colors.white,
               controller: apiUrlController,
               decoration: InputDecoration(labelText: 'SQL API URL'),
               onChanged: (value) => settings.setApiUrl(value),
@@ -55,7 +54,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             SizedBox(height: 16),
             // Database User
             TextField(
-              cursorColor: Colors.white,
               controller: dbUserController,
               decoration: InputDecoration(labelText: 'Database User'),
               onChanged: (value) => settings.setDbUser(value),
@@ -63,7 +61,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             SizedBox(height: 16),
             // Database Password with eye button
             TextField(
-              cursorColor: Colors.white,
               controller: dbPasswordController,
               decoration: InputDecoration(
                 labelText: 'Database Password',
@@ -78,7 +75,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             SizedBox(height: 16),
             // OpenAI API URL
             TextField(
-              cursorColor: Colors.white,
               controller: openAiApiUrlController,
               decoration: InputDecoration(labelText: 'OpenAI API URL'),
               onChanged: (value) => settings.setOpenAiApiUrl(value),
@@ -86,7 +82,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             SizedBox(height: 16),
             // OpenAI API Key with eye button
             TextField(
-              cursorColor: Colors.white,
               controller: openAiApiKeyController,
               decoration: InputDecoration(
                 labelText: 'OpenAI API Key',
