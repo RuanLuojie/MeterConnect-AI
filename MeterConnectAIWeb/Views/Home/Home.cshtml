@@ -1,95 +1,173 @@
 ﻿@{
+    ViewBag.Title = "Home";
     Layout = "~/Views/Shared/_LayoutHome.cshtml";
 }
 
-<script>
-    window.onload = function () {
-        const chartData = {
-            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-            datasets: [{
-                label: 'Sample Data',
-                data: [65, 59, 80, 81, 56, 55, 40],
-                borderColor: 'rgba(255, 99, 132, 1)',
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                pointBackgroundColor: 'rgba(255, 255, 255, 1)',
-                pointBorderColor: '#FFFFFF',
-                borderWidth: 1
-            }]
-        };
+@section breadcrumb_section {
+    <div class="col-lg-10">
+        <h2>電表查詢</h2>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item active" style="color:white;">
+                <strong>電表查詢-查詢與資料列表</strong>
+            </li>
+        </ol>
+    </div>
+}
 
-        const chartElements = document.querySelectorAll('.DataChart');
+@section js_section {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const collapseLinks = document.querySelectorAll('.collapse-link');
+            collapseLinks.forEach((link) => {
+                const targetId = link.getAttribute('href');
+                const targetEl = document.querySelector(targetId);
 
-        chartElements.forEach(canvas => {
-            const ctx = canvas.getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: chartData,
-                options: {
-                    scales: {
-                        y: {
-                            ticks: {
-                                color: '#FFFFFF',
-                            },
-                            beginAtZero: true
-                        },
-                        x: {
-                            ticks: {
-                                color: '#FFFFFF',
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+                targetEl.addEventListener('shown.bs.collapse', function () {
+                    const icon = link.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
                     }
-                }
+                });
+
+                targetEl.addEventListener('hidden.bs.collapse', function () {
+                    const icon = link.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                    }
+                });
             });
         });
-    }
-</script>
-
-<div class="form-group row mx-auto">
-
-    <label class="col-lg-1 col-form-label">API</label>
-    <div class="col-lg-4 chart-container">
-        <canvas class="DataChart"></canvas>
-    </div>
-
-    <label class="col-lg-1 col-form-label">CPU</label>
-    <div class="col-lg-4 chart-container">
-        <canvas class="DataChart"></canvas>
-    </div>
-
-    <label class="col-lg-1 col-form-label">WiFi</label>
-    <div class="col-lg-4 chart-container">
-        <canvas class="DataChart"></canvas>
-    </div>
-
-</div>
-<hr>
-<div class="form-group row mx-auto">
-
-    <label class="col-lg-1 col-form-label">API</label>
-    <div class="col-lg-4 chart-container">
-        <canvas class="DataChart"></canvas>
-    </div>
-
-    <label class="col-lg-1 col-form-label">CPU</label>
-    <div class="col-lg-4 chart-container">
-        <canvas class="DataChart"></canvas>
-    </div>
-
-    <label class="col-lg-1 col-form-label">WiFi</label>
-    <div class="col-lg-4 chart-container">
-        <canvas class="DataChart"></canvas>
-    </div>
-
-</div>
+    </script>
+}
 
 <style>
-    .chart-container {
-        width: 200px;
-        height: 100px;
+    /* 您的样式 */
+    .ibox {
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .ibox-title {
+        background-color: #e9ecef;
+        padding: 15px;
+        font-size: 18px;
+        font-weight: bold;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: black;
+    }
+
+    .ibox-content {
+        padding: 0;
+        color: black;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        table th,
+        table td {
+            padding: 10px 15px;
+            text-align: left;
+            border: 1px solid #e0e0e0;
+        }
+
+        table th {
+            background-color: #f7f7f7;
+            font-weight: bold;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+    .collapse-link i {
+        transition: transform 0.3s ease;
     }
 </style>
+
+<div class="row">
+    <!-- 折叠面板 1 -->
+    <div class="col-lg-12">
+        <div class="ibox">
+            <div class="ibox-title">
+                電表查詢
+                <a class="collapse-link" data-bs-toggle="collapse" href="#queryForm" role="button" aria-expanded="true">
+                    <i class="fa fa-chevron-up"></i>
+                </a>
+            </div>
+            <div class="ibox-content collapse show" id="queryForm">
+                <form>
+                    <div class="row m-3">
+                        <div class="col-lg-3">
+                            <label for="userName" class="form-label">電號</label>
+                            <input type="text" id="userName" class="form-control" placeholder="輸入電號">
+                        </div>
+                        <div class="col-lg-3">
+                            <label for="date" class="form-label">日期</label>
+                            <input type="text" id="date" class="form-control" placeholder="輸入日期">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-success m-3">
+                        <i class="fa fa-search"></i> 查詢
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 折叠面板 2 -->
+    <div class="col-lg-12">
+        <div class="ibox">
+            <div class="ibox-title">
+                資料列表
+                <a class="collapse-link" data-bs-toggle="collapse" href="#dataList" role="button" aria-expanded="true">
+                    <i class="fa fa-chevron-up"></i>
+                </a>
+            </div>
+            <div class="ibox-content collapse show" id="dataList">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>電話</th>
+                            <th>Email</th>
+                            <th class="text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>王小明</td>
+                            <td>0912345678</td>
+                            <td>test@example.com</td>
+                            <td class="text-center">
+                                <button class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> 刪除</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>李大華</td>
+                            <td>0987654321</td>
+                            <td>example@test.com</td>
+                            <td class="text-center">
+                                <button class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> 刪除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
