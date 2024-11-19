@@ -7,6 +7,9 @@ import '../viewmodels/camera_viewmodel.dart';
 import 'settings_screen.dart';
 import '../login_screen.dart';
 import 'registration_screen.dart'; // 引入註冊界面
+import 'issue_feedback_screen.dart'; // 引入問題反饋表界面
+import 'emergency_notification_screen.dart'; // 引入緊急通知界面
+import 'usage_data_screen.dart'; // 引入使用數據界面
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -171,7 +174,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => IssueFeedbackScreen(),
+                      ),
+                    );
+                  },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -189,13 +199,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UsageDataScreen(),
+                      ),
+                    );
+                  },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.report, size: 40),
+                      Icon(Icons.bar_chart, size: 40),
                       SizedBox(height: 8),
-                      Text('提交報告'),
+                      Text('使用數據'),
                     ],
                   ),
                 ),
@@ -207,7 +224,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EmergencyNotificationScreen(),
+                      ),
+                    );
+                  },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
