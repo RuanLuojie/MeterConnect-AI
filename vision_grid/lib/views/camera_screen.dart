@@ -6,6 +6,10 @@ import 'dart:typed_data';
 import '../viewmodels/camera_viewmodel.dart';
 
 class CameraScreen extends StatefulWidget {
+  final String displayPromptText;
+
+  CameraScreen({this.displayPromptText = '請將方框對準數字錶盤'});
+
   @override
   _CameraScreenState createState() => _CameraScreenState();
 }
@@ -19,7 +23,8 @@ class _CameraScreenState extends State<CameraScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final cameraViewModel = Provider.of<CameraViewModel>(context, listen: false);
+      final cameraViewModel =
+          Provider.of<CameraViewModel>(context, listen: false);
       availableCameras().then((cameras) {
         cameraViewModel.initializeCamera(cameras);
       });
@@ -29,11 +34,11 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Camera")),
+      appBar: AppBar(title: const Text("Camera")),
       body: Consumer<CameraViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.initializeControllerFuture == null) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           return FutureBuilder<void>(
@@ -45,7 +50,8 @@ class _CameraScreenState extends State<CameraScreen> {
                     GestureDetector(
                       onTapDown: (TapDownDetails details) {
                         final Size previewSize = MediaQuery.of(context).size;
-                        viewModel.setExposurePoint(details.localPosition, previewSize);
+                        viewModel.setExposurePoint(
+                            details.localPosition, previewSize);
                       },
                       child: CameraPreview(viewModel.controller),
                     ),
@@ -61,8 +67,9 @@ class _CameraScreenState extends State<CameraScreen> {
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 50),
                         child: Text(
-                          '請將方框對準數字錶盤',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                          widget.displayPromptText,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 18),
                         ),
                       ),
                     ),
@@ -77,7 +84,7 @@ class _CameraScreenState extends State<CameraScreen> {
                           });
                           Uint8List? imageData = await viewModel.capturePhoto();
                           if (imageData != null) {
-                            _showCapturedImage(context, imageData);
+                            await _showCapturedImage(context, imageData);
                           }
                         },
                         child: const Icon(
@@ -102,8 +109,9 @@ class _CameraScreenState extends State<CameraScreen> {
     );
   }
 
-  void _showCapturedImage(BuildContext parentContext, Uint8List imageData) {
-    showDialog(
+  Future<void> _showCapturedImage(
+      BuildContext parentContext, Uint8List imageData) async {
+    String? result = await showDialog(
       context: parentContext,
       builder: (BuildContext context) {
         return Dialog(
@@ -117,29 +125,13 @@ class _CameraScreenState extends State<CameraScreen> {
         );
       },
     );
-  }
 
-  Future<void> _recognizeTextWithAI(BuildContext context, Uint8List imageData, StateSetter dialogSetState) async {
-    final cameraViewModel = Provider.of<CameraViewModel>(context, listen: false);
-    try {
-      // 傳入 imageData 和 context 兩個參數
-      final result = await cameraViewModel.recognizeNumber(imageData, context);
-      dialogSetState(() { // 使用Dialog的setState
-        _isUploading = false;
-        recognizedText = result ?? "無法辨識數字"; // 防止空值
-      });
-    } catch (e) {
-      print('辨識過程中出現錯誤: $e');
-      dialogSetState(() {
-        _isUploading = false;
-        recognizedText = '辨識失敗';
-      });
+    if (result != null) {
+      Navigator.of(context).pop(result);
     }
   }
-
 }
 
-// CustomPainter for the alignment rectangle
 class RectPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -153,7 +145,7 @@ class RectPainter extends CustomPainter {
       ..strokeWidth = 5
       ..style = PaintingStyle.stroke;
 
-    final double rectWidth = size.width * 0.7; // 2:7 aspect ratio
+    final double rectWidth = size.width * 0.7;
     final double rectHeight = size.height * 0.2;
 
     final double left = (size.width - rectWidth) / 2;
@@ -163,41 +155,40 @@ class RectPainter extends CustomPainter {
 
     final Rect rect = Rect.fromLTRB(left, top, right, bottom);
 
-    // Draw the border rectangle
     canvas.drawRect(rect, borderPaint);
 
-    // Draw white corners
     final double cornerLength = 20.0;
 
-    // Top-left corner
-    canvas.drawLine(Offset(left, top), Offset(left + cornerLength, top), cornerPaint);
-    canvas.drawLine(Offset(left, top), Offset(left, top + cornerLength), cornerPaint);
+    canvas.drawLine(
+        Offset(left, top), Offset(left + cornerLength, top), cornerPaint);
+    canvas.drawLine(
+        Offset(left, top), Offset(left, top + cornerLength), cornerPaint);
 
-    // Top-right corner
-    canvas.drawLine(Offset(right, top), Offset(right - cornerLength, top), cornerPaint);
-    canvas.drawLine(Offset(right, top), Offset(right, top + cornerLength), cornerPaint);
+    canvas.drawLine(
+        Offset(right, top), Offset(right - cornerLength, top), cornerPaint);
+    canvas.drawLine(
+        Offset(right, top), Offset(right, top + cornerLength), cornerPaint);
 
-    // Bottom-left corner
-    canvas.drawLine(Offset(left, bottom), Offset(left + cornerLength, bottom), cornerPaint);
-    canvas.drawLine(Offset(left, bottom), Offset(left, bottom - cornerLength), cornerPaint);
+    canvas.drawLine(
+        Offset(left, bottom), Offset(left + cornerLength, bottom), cornerPaint);
+    canvas.drawLine(
+        Offset(left, bottom), Offset(left, bottom - cornerLength), cornerPaint);
 
-    // Bottom-right corner
-    canvas.drawLine(Offset(right, bottom), Offset(right - cornerLength, bottom), cornerPaint);
-    canvas.drawLine(Offset(right, bottom), Offset(right, bottom - cornerLength), cornerPaint);
+    canvas.drawLine(Offset(right, bottom), Offset(right - cornerLength, bottom),
+        cornerPaint);
+    canvas.drawLine(Offset(right, bottom), Offset(right, bottom - cornerLength),
+        cornerPaint);
 
-    // Draw the transparent grey overlay outside the rectangle
     final Paint overlayPaint = Paint()
       ..color = Colors.black38.withOpacity(0.5)
       ..style = PaintingStyle.fill;
 
-    // Top overlay
     canvas.drawRect(Rect.fromLTRB(0, 0, size.width, top), overlayPaint);
-    // Bottom overlay
-    canvas.drawRect(Rect.fromLTRB(0, bottom, size.width, size.height), overlayPaint);
-    // Left overlay
+    canvas.drawRect(
+        Rect.fromLTRB(0, bottom, size.width, size.height), overlayPaint);
     canvas.drawRect(Rect.fromLTRB(0, top, left, bottom), overlayPaint);
-    // Right overlay
-    canvas.drawRect(Rect.fromLTRB(right, top, size.width, bottom), overlayPaint);
+    canvas.drawRect(
+        Rect.fromLTRB(right, top, size.width, bottom), overlayPaint);
   }
 
   @override
@@ -208,13 +199,18 @@ class CapturedImageDialogContent extends StatefulWidget {
   final Uint8List imageData;
   final BuildContext parentContext;
 
-  CapturedImageDialogContent({required this.imageData, required this.parentContext});
+  CapturedImageDialogContent({
+    required this.imageData,
+    required this.parentContext,
+  });
 
   @override
-  _CapturedImageDialogContentState createState() => _CapturedImageDialogContentState();
+  _CapturedImageDialogContentState createState() =>
+      _CapturedImageDialogContentState();
 }
 
-class _CapturedImageDialogContentState extends State<CapturedImageDialogContent> {
+class _CapturedImageDialogContentState
+    extends State<CapturedImageDialogContent> {
   bool _isUploading = true;
   String? recognizedText;
 
@@ -225,12 +221,16 @@ class _CapturedImageDialogContentState extends State<CapturedImageDialogContent>
   }
 
   Future<void> _recognizeTextWithAI() async {
-    final cameraViewModel = Provider.of<CameraViewModel>(widget.parentContext, listen: false);
+    final cameraViewModel =
+        Provider.of<CameraViewModel>(widget.parentContext, listen: false);
     try {
-      final result = await cameraViewModel.recognizeNumber(widget.imageData, widget.parentContext);
+      final result = await cameraViewModel.recognizeNumber(
+        widget.imageData,
+        widget.parentContext,
+      );
       setState(() {
         _isUploading = false;
-        recognizedText = result ?? "無法辨識數字";
+        recognizedText = result ?? "無法辨識";
       });
     } catch (e) {
       print('辨識過程中出現錯誤: $e');
@@ -245,8 +245,8 @@ class _CapturedImageDialogContentState extends State<CapturedImageDialogContent>
   Widget build(BuildContext context) {
     return Container(
       width: 300,
-      constraints: BoxConstraints(maxHeight: 400),
-      padding: EdgeInsets.all(10),
+      constraints: const BoxConstraints(maxHeight: 400),
+      padding: const EdgeInsets.all(10),
       child: ListView(
         shrinkWrap: true,
         children: [
@@ -258,17 +258,18 @@ class _CapturedImageDialogContentState extends State<CapturedImageDialogContent>
               child: Image.memory(widget.imageData),
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           if (recognizedText != null)
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 "辨識結果: $recognizedText",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           if (_isUploading)
-            Center(
+            const Center(
               child: CircularProgressIndicator(),
             ),
           if (!_isUploading && recognizedText != null)
@@ -277,15 +278,15 @@ class _CapturedImageDialogContentState extends State<CapturedImageDialogContent>
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    // 確認按鈕的邏輯
+                    Navigator.of(context).pop(recognizedText);
                   },
-                  child: Text('確認'),
+                  child: const Text('確認'),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('取消'),
+                  child: const Text('取消'),
                 ),
               ],
             ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'viewmodels/settings_viewmodel.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -11,7 +13,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _apiKeyController = TextEditingController();
   bool _rememberApiKey = false;
-  bool _isLoading = false; // 用於顯示載入狀態
+  bool _isLoading = false;
+
+  static const String _adminPassword = '1134';
 
   @override
   void initState() {
@@ -19,22 +23,67 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadSavedApiKey();
   }
 
-  Future<void> _loadSavedApiKey() async {
+  Future<void> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _rememberApiKey = prefs.getBool('rememberApiKey') ?? false;
-      if (_rememberApiKey) {
-        _apiKeyController.text = prefs.getString('apiKey') ?? '';
+    final savedApiKey = prefs.getString('apiKey');
+    final rememberApiKey = prefs.getBool('rememberApiKey') ?? false;
+
+    if (rememberApiKey && savedApiKey != null) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final userInfo = await _verifyApiKeyAndGetUserInfo(savedApiKey);
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (userInfo != null) {
+        final settings = Provider.of<SettingsViewModel>(context, listen: false);
+        settings.setDbUser(userInfo['username']);
+        settings.setDbPassword(userInfo['password']);
+
+        Navigator.pushReplacementNamed(context, '/home');
       }
-    });
+    }
   }
 
-  Future<void> _saveApiKeyAndUserData(String apiKey, String dbUser, String dbPassword) async {
+  Future<void> _loadSavedApiKey() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('apiKey', apiKey);
-    await prefs.setString('dbUser', dbUser);
-    await prefs.setString('dbPassword', dbPassword);
+    final savedRememberApiKey = prefs.getBool('rememberApiKey') ?? false;
+    final savedApiKey = prefs.getString('apiKey') ?? '';
+
+    setState(() {
+      _rememberApiKey = savedRememberApiKey;
+      if (_rememberApiKey) {
+        _apiKeyController.text = savedApiKey;
+      }
+    });
+
+    // 在加载完成后，检查是否需要自动登录
+    if (_rememberApiKey && savedApiKey.isNotEmpty) {
+      // 延迟调用，确保在 widget 构建完成后执行
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleLogin(autoLogin: true);
+      });
+    }
+  }
+
+  Future<void> _saveApiKeyAndUserData(
+      String apiKey, String dbUser, String dbPassword) async {
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('rememberApiKey', _rememberApiKey);
+
+    if (_rememberApiKey) {
+      await prefs.setString('apiKey', apiKey);
+      await prefs.setString('dbUser', dbUser);
+      await prefs.setString('dbPassword', dbPassword);
+    } else {
+      await prefs.remove('apiKey');
+      await prefs.remove('dbUser');
+      await prefs.remove('dbPassword');
+    }
   }
 
   @override
@@ -54,12 +103,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               SizedBox(height: 32),
-
-              // API Key TextField
               TextField(
                 controller: _apiKeyController,
                 decoration: InputDecoration(
-                  labelText: 'API Key',
+                  labelText: 'API Key 或 管理員密碼',
                   labelStyle: TextStyle(color: Colors.grey),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -73,34 +120,31 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               SizedBox(height: 16),
-
-              // Remember API Key Checkbox
               CheckboxListTile(
                 title: Text("記住 API Key"),
                 value: _rememberApiKey,
                 activeColor: Colors.white,
-                onChanged: (bool? value) {
+                onChanged: (bool? value) async {
                   setState(() {
                     _rememberApiKey = value ?? false;
                   });
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('rememberApiKey', _rememberApiKey);
                 },
               ),
               SizedBox(height: 24),
-
-              // Login Button
               _isLoading
-                  ? CircularProgressIndicator() // 顯示載入進度指示器
+                  ? CircularProgressIndicator()
                   : ElevatedButton(
-                onPressed: () {
-                  _handleLogin();
-                },
+                onPressed: _handleLogin,
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  padding:
+                  EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 ),
-                child: Text('Login'),
+                child: Text('登入'),
               ),
             ],
           ),
@@ -109,46 +153,50 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _handleLogin() async {
-    final apiKey = _apiKeyController.text;
+  Future<void> _handleLogin({bool autoLogin = false}) async {
+    final input = _apiKeyController.text.trim();
 
-    if (apiKey.isNotEmpty) {
-      setState(() {
-        _isLoading = true; // 開始載入狀態
-      });
-
-      // 呼叫伺服器 API 驗證並取得用戶資訊
-      final userInfo = await _verifyApiKeyAndGetUserInfo(apiKey);
-
-      setState(() {
-        _isLoading = false; // 結束載入狀態
-      });
-
-      if (userInfo != null) {
-        // 儲存 API Key 和用戶資料
-        await _saveApiKeyAndUserData(apiKey, userInfo['username'], userInfo['password']);
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid API Key. Please try again.')),
-        );
+    if (input.isEmpty) {
+      if (!autoLogin) {
+        _showSnackBar('請輸入您的 API Key 或 管理員密碼');
       }
+      return;
+    }
+
+    if (input == _adminPassword) {
+      Navigator.pushReplacementNamed(context, '/home');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final userInfo = await _verifyApiKeyAndGetUserInfo(input);
+
+    setState(() => _isLoading = false);
+
+    if (userInfo != null) {
+      await _saveApiKeyAndUserData(
+          input, userInfo['username'], userInfo['password']);
+
+      final settings = Provider.of<SettingsViewModel>(context, listen: false);
+      settings.setDbUser(userInfo['username']);
+      settings.setDbPassword(userInfo['password']);
+
+      Navigator.pushReplacementNamed(context, '/home');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter your API Key')),
-      );
+      if (!autoLogin) {
+        _showSnackBar('無效的 API Key，請重試。');
+      }
     }
   }
 
-  Future<Map<String, dynamic>?> _verifyApiKeyAndGetUserInfo(String apiKey) async {
-    // 替換為實際的 API 驗證端點
-    final url = Uri.parse("https://sql-sever-v3api.fly.dev/api/SqlApi/user-info");
+  Future<Map<String, dynamic>?> _verifyApiKeyAndGetUserInfo(
+      String apiKey) async {
+    final url =
+    Uri.parse("https://sql-sever-v3api.fly.dev/api/SqlApi/user-info");
 
     try {
-      final response = await http.get(url, headers: {
-        'X-API-KEY': apiKey,
-      });
-
+      final response = await http.get(url, headers: {'X-API-KEY': apiKey});
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return {
@@ -156,13 +204,16 @@ class _LoginScreenState extends State<LoginScreen> {
           'password': data['password'],
           'database': data['database'],
         };
-      } else {
-        return null; // 驗證失敗
       }
     } catch (e) {
       print('API 驗證失敗: $e');
-      return null;
     }
+    return null;
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override

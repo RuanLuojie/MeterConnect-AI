@@ -15,7 +15,6 @@ class CameraViewModel extends ChangeNotifier {
   String? recognizedText;
 
   Future<String?> recognizeNumber(Uint8List imageData, BuildContext context) async {
-    // 确保已导入 SettingsViewModel
     final settings = Provider.of<SettingsViewModel>(context, listen: false);
     return await _openAIService.recognizeNumber(
       imageData,

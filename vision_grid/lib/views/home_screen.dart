@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -5,6 +6,7 @@ import 'camera_screen.dart';
 import '../viewmodels/camera_viewmodel.dart';
 import 'settings_screen.dart';
 import '../login_screen.dart';
+import 'registration_screen.dart'; // 引入註冊界面
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -12,10 +14,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0; // 當前選中頁面索引
-  final PageController _pageController = PageController(); // PageView 控制器
+  int _currentIndex = 0;
+  final PageController _pageController = PageController();
+  late Timer _timer;
 
-  // 宣傳圖片列表
   final List<String> _imagePaths = [
     'assets/images/promo1.webp',
     'assets/images/promo2.webp',
@@ -23,13 +25,41 @@ class _HomeScreenState extends State<HomeScreen> {
     'assets/images/promo4.webp',
   ];
 
-  // 導航到不同頁面的函數
+  @override
+  void initState() {
+    super.initState();
+    _startAutoScroll();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _startAutoScroll() {
+    _timer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
+      if (_pageController.hasClients) {
+        int nextPage = _pageController.page!.round() + 1;
+        if (nextPage >= _imagePaths.length) {
+          nextPage = 0; // 回到第一張圖片
+        }
+        _pageController.animateToPage(
+          nextPage,
+          duration: Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
   void _navigateToPage(int index) {
     switch (index) {
       case 0:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()), // 回到首頁
+          MaterialPageRoute(builder: (context) => HomeScreen()),
         );
         break;
       case 1:
@@ -71,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          // 輪播圖片
           Container(
             height: 180.0,
             child: PageView(
@@ -90,7 +119,6 @@ class _HomeScreenState extends State<HomeScreen> {
               }).toList(),
             ),
           ),
-          // 圖片指示器
           SizedBox(height: 8),
           SmoothPageIndicator(
             controller: _pageController,
@@ -103,7 +131,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           SizedBox(height: 20),
-          // 按鈕區域
           Expanded(
             child: GridView.count(
               crossAxisCount: 2,
@@ -111,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSpacing: 16.0,
               padding: EdgeInsets.all(16.0),
               children: [
-                // 定位
+                // 註冊按鈕
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.all(16),
@@ -120,18 +147,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   onPressed: () {
-                    // 定位功能
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RegistrationScreen(),
+                      ),
+                    );
                   },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.location_on, size: 40),
+                      Icon(Icons.app_registration, size: 40),
                       SizedBox(height: 8),
-                      Text('定位'),
+                      Text('註冊'),
                     ],
                   ),
                 ),
-                // 問題回饋表
+                // 問題反饋表按鈕
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.all(16),
@@ -139,19 +171,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
-                    // 問題回饋表功能
-                  },
+                  onPressed: () {},
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.feedback, size: 40),
                       SizedBox(height: 8),
-                      Text('問題回饋表'),
+                      Text('問題反饋表'),
                     ],
                   ),
                 ),
-                // 提交報告
+                // 提交報告按鈕
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.all(16),
@@ -159,9 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
-                    // 提交報告功能
-                  },
+                  onPressed: () {},
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -171,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                // 緊急通報
+                // 緊急通報按鈕
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.all(16),
@@ -179,9 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
-                    // 緊急通報功能
-                  },
+                  onPressed: () {},
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -202,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _currentIndex = index;
           });
-          _navigateToPage(index); // 根據選中的選項導航到相應頁面
+          _navigateToPage(index);
         },
         items: const [
           BottomNavigationBarItem(
@@ -215,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: '設定',
+            label: '設置',
           ),
         ],
       ),

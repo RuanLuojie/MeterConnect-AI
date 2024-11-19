@@ -45,27 +45,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // SQL API URL
             TextField(
               controller: apiUrlController,
               decoration: InputDecoration(labelText: 'SQL API URL'),
               onChanged: (value) => settings.setApiUrl(value),
             ),
             SizedBox(height: 16),
-            // Database User
             TextField(
               controller: dbUserController,
               decoration: InputDecoration(labelText: 'Database User'),
               onChanged: (value) => settings.setDbUser(value),
             ),
             SizedBox(height: 16),
-            // Database Password with eye button
             TextField(
               controller: dbPasswordController,
               decoration: InputDecoration(
                 labelText: 'Database Password',
                 suffixIcon: IconButton(
-                  icon: Icon(settings.isDbPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(settings.isDbPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off),
                   onPressed: settings.toggleDbPasswordVisibility,
                 ),
               ),
@@ -73,20 +72,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (value) => settings.setDbPassword(value),
             ),
             SizedBox(height: 16),
-            // OpenAI API URL
             TextField(
               controller: openAiApiUrlController,
               decoration: InputDecoration(labelText: 'OpenAI API URL'),
               onChanged: (value) => settings.setOpenAiApiUrl(value),
             ),
             SizedBox(height: 16),
-            // OpenAI API Key with eye button
             TextField(
               controller: openAiApiKeyController,
               decoration: InputDecoration(
                 labelText: 'OpenAI API Key',
                 suffixIcon: IconButton(
-                  icon: Icon(settings.isOpenAiKeyVisible ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(settings.isOpenAiKeyVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off),
                   onPressed: settings.toggleOpenAiKeyVisibility,
                 ),
               ),
@@ -94,7 +93,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (value) => settings.setOpenAiApiKey(value),
             ),
             SizedBox(height: 16),
-            // Remember settings checkbox
             CheckboxListTile(
               title: Text("記住設定"),
               activeColor: Colors.white,
