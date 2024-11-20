@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:provider/provider.dart';
 import 'dart:typed_data';
-
+import '../viewmodels/settings_viewmodel.dart';
 import '../viewmodels/camera_viewmodel.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -24,7 +24,7 @@ class _CameraScreenState extends State<CameraScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cameraViewModel =
-          Provider.of<CameraViewModel>(context, listen: false);
+      Provider.of<CameraViewModel>(context, listen: false);
       availableCameras().then((cameras) {
         cameraViewModel.initializeCamera(cameras);
       });
@@ -33,6 +33,10 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 獲取當前表類型
+    final settings = Provider.of<SettingsViewModel>(context, listen: false);
+    final currentMeterType = settings.meterType;
+
     return Scaffold(
       appBar: AppBar(title: const Text("Camera")),
       body: Consumer<CameraViewModel>(
@@ -62,12 +66,29 @@ class _CameraScreenState extends State<CameraScreen> {
                         painter: RectPainter(),
                       ),
                     ),
+                    // 顯示表類型
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Text(
+                          "當前設定表類型：$currentMeterType",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
                     Align(
                       alignment: Alignment.center,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 50),
                         child: Text(
-                          widget.displayPromptText,
+                          currentMeterType == "電表"
+                              ? "請將方框對準電表讀數"
+                              : "請將方框對準瓦斯表讀數",
                           style: const TextStyle(
                               color: Colors.white, fontSize: 18),
                         ),

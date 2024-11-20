@@ -14,6 +14,8 @@ class _UsageDataScreenState extends State<UsageDataScreen> {
   final List<String> _meterTypes = ['電表', '瓦斯表'];
   final List<String> _units = ['日', '週', '月'];
 
+  String get _unitLabel => _selectedMeterType == '電表' ? 'kWh' : 'm³';
+
   String _formatDate(DateTime date) {
     switch (_selectedUnit) {
       case '日':
@@ -63,15 +65,16 @@ class _UsageDataScreenState extends State<UsageDataScreen> {
           title: Text("選擇月份"),
           content: SizedBox(
             height: 200,
-            child: ListWheelScrollView(
+            child: ListWheelScrollView.useDelegate(
               itemExtent: 50,
-              children: List.generate(
-                12,
-                    (index) => Center(
-                  child: Text(
-                    DateFormat('MMMM', 'zh_TW').format(DateTime(2020, index + 1)),
-                  ),
-                ),
+              childDelegate: ListWheelChildBuilderDelegate(
+                builder: (context, index) {
+                  if (index < 0 || index >= 12) return null;
+                  final month = DateTime(initialDate.year, index + 1, 1);
+                  return Center(
+                    child: Text(DateFormat('MMMM', 'zh_TW').format(month)),
+                  );
+                },
               ),
               onSelectedItemChanged: (index) {
                 tempDate = DateTime(initialDate.year, index + 1, 1);
@@ -182,7 +185,7 @@ class _UsageDataScreenState extends State<UsageDataScreen> {
                 itemBuilder: (context, index) {
                   return ListTile(
                     title: Text('數據項目 ${index + 1}'),
-                    subtitle: Text('數據內容 ${index * 100} kWh/m³'),
+                    subtitle: Text('數據內容 ${index * 100} $_unitLabel'),
                   );
                 },
               ),

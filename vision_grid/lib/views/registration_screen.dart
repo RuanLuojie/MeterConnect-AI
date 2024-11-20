@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/camera_viewmodel.dart';
+import '../viewmodels/settings_viewmodel.dart';
+import '../models/registration_service.dart';
 import '../views/camera_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
@@ -13,55 +14,53 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  String _selectedItem = '數字電表'; // 默認選項
 
-  final List<String> _items = ['數字電表', '數字瓦斯表'];
+  String _selectedMeterType = "電表"; // 預設值
+  bool _isLoading = false;
 
-  void _register() {
-    final idCode = _idCodeController.text.trim();
-    final address = _addressController.text.trim();
-    final phone = _phoneController.text.trim();
-    final email = _emailController.text.trim();
+  @override
+  void initState() {
+    super.initState();
+    final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
+    _emailController.text = settingsViewModel.email; // 自動填入電子郵箱
+  }
 
-    if (idCode.isEmpty || address.isEmpty || phone.isEmpty || email.isEmpty) {
-      _showSnackBar('所有字段都是必填的！');
+  Future<void> _register() async {
+    final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
+
+    if (_idCodeController.text.trim().isEmpty) {
+      _showSnackBar('編號代碼為必填字段！');
       return;
     }
 
-    // 模擬註冊邏輯
-    _showSnackBar('註冊成功！');
-  }
+    // 設定 ViewModel 的值
+    settingsViewModel.setIdCode(_idCodeController.text.trim());
+    settingsViewModel.setAddress(_addressController.text.trim());
+    settingsViewModel.setPhone(_phoneController.text.trim());
+    settingsViewModel.setMeterType(_selectedMeterType);
 
-  void _clearFields() {
-    setState(() {
-      _idCodeController.clear();
-      _addressController.clear();
-      _phoneController.clear();
-      _emailController.clear();
-      _selectedItem = '數字電表';
-    });
-  }
+    setState(() => _isLoading = true);
+    final success = await RegistrationService().registerUser(settingsViewModel);
+    setState(() => _isLoading = false);
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    if (success) {
+      _showSnackBar('註冊成功！');
+      _clearFields();
+    } else {
+      _showSnackBar('註冊失敗，請稍後重試。');
+    }
   }
 
   Future<void> _captureIdCode() async {
-    // 打開相機界面
     String? recognizedText = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ChangeNotifierProvider(
-          create: (_) => CameraViewModel(),
-          child: CameraScreen(
-            displayPromptText: '請將方框對準編號代碼',
-          ),
+        builder: (context) => CameraScreen(
+          displayPromptText: '請將方框對準編號代碼',
         ),
       ),
     );
 
-    // 如果用戶拍攝並識別出文字，更新編號代碼欄位
     if (recognizedText != null && recognizedText.isNotEmpty) {
       setState(() {
         _idCodeController.text = recognizedText;
@@ -71,44 +70,29 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
   }
 
+  void _clearFields() {
+    setState(() {
+      _idCodeController.clear();
+      _addressController.clear();
+      _phoneController.clear();
+      _selectedMeterType = "電表"; // 重置為預設值
+    });
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('註冊'),
-      ),
+      appBar: AppBar(title: Text('註冊')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '項目信息',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedItem,
-                items: _items.map((String item) {
-                  return DropdownMenuItem<String>(
-                    value: item,
-                    child: Text(item),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedItem = value!;
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: '選擇項目',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
               TextField(
                 controller: _idCodeController,
                 decoration: InputDecoration(
@@ -118,9 +102,40 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(Icons.camera_alt),
-                    onPressed: _captureIdCode, // 調用拍照識別功能
+                    onPressed: _captureIdCode,
                   ),
                 ),
+              ),
+              SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedMeterType,
+                items: [
+                  DropdownMenuItem(value: "電表", child: Text("電表")),
+                  DropdownMenuItem(value: "瓦斯表", child: Text("瓦斯表")),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedMeterType = value!;
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: '表類別',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  labelText: '電子郵箱',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                readOnly: true, // 設為只讀
               ),
               SizedBox(height: 16),
               TextField(
@@ -143,40 +158,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
                 keyboardType: TextInputType.phone,
               ),
-              SizedBox(height: 16),
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: '電子郵箱',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
               SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   ElevatedButton(
-                    onPressed: _register,
-                    child: Text('註冊'),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
+                    onPressed: _isLoading ? null : _register,
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text('註冊'),
                   ),
                   ElevatedButton(
                     onPressed: _clearFields,
                     child: Text('清除'),
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       backgroundColor: Colors.grey,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
                     ),
                   ),
                 ],

@@ -57,21 +57,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _rememberApiKey = savedRememberApiKey;
       if (_rememberApiKey) {
-        _apiKeyController.text = savedApiKey;
+        _apiKeyController.text = savedApiKey; // 加载并显示 API Key
       }
     });
-
-    // 在加载完成后，检查是否需要自动登录
-    if (_rememberApiKey && savedApiKey.isNotEmpty) {
-      // 延迟调用，确保在 widget 构建完成后执行
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _handleLogin(autoLogin: true);
-      });
-    }
   }
 
   Future<void> _saveApiKeyAndUserData(
-      String apiKey, String dbUser, String dbPassword) async {
+      String apiKey, String dbUser, String dbPassword, String email) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('rememberApiKey', _rememberApiKey);
 
@@ -79,10 +71,12 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString('apiKey', apiKey);
       await prefs.setString('dbUser', dbUser);
       await prefs.setString('dbPassword', dbPassword);
+      await prefs.setString('email', email);
     } else {
       await prefs.remove('apiKey');
       await prefs.remove('dbUser');
       await prefs.remove('dbPassword');
+      await prefs.remove('email');
     }
   }
 
@@ -176,11 +170,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (userInfo != null) {
       await _saveApiKeyAndUserData(
-          input, userInfo['username'], userInfo['password']);
+          input, userInfo['username'], userInfo['password'], userInfo['email']);
 
       final settings = Provider.of<SettingsViewModel>(context, listen: false);
       settings.setDbUser(userInfo['username']);
       settings.setDbPassword(userInfo['password']);
+      settings.setEmail(userInfo['email']);
+      settings.setApiKey(input);
 
       Navigator.pushReplacementNamed(context, '/home');
     } else {
@@ -203,6 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
           'username': data['username'],
           'password': data['password'],
           'database': data['database'],
+          'email': data['email'],
         };
       }
     } catch (e) {

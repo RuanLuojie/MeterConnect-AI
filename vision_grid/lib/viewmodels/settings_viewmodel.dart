@@ -16,6 +16,11 @@ class SettingsViewModel extends ChangeNotifier {
   bool _isDbPasswordVisible = false;
   bool _isOpenAiKeyVisible = false;
   String _idCode = "";
+  String _email = "";
+  String _phone = "";
+  String _address = "";
+  String _meterType = "電表";
+  String _apiKey = "";
 
   // Getters
   String get apiUrl => _apiUrl;
@@ -27,6 +32,11 @@ class SettingsViewModel extends ChangeNotifier {
   bool get isDbPasswordVisible => _isDbPasswordVisible;
   bool get isOpenAiKeyVisible => _isOpenAiKeyVisible;
   String get idCode => _idCode;
+  String get email => _email;
+  String get phone => _phone;
+  String get address => _address;
+  String get meterType => _meterType;
+  String get apiKey => _apiKey;
 
   // Setters
   void setApiUrl(String value) {
@@ -34,7 +44,31 @@ class SettingsViewModel extends ChangeNotifier {
     _saveSettings();
     notifyListeners();
   }
-
+  void setApiKey(String value) {
+    _apiKey = value;
+    _saveSettings();
+    notifyListeners();
+  }
+  void setMeterType(String value) {
+    _meterType = value;
+    _saveSettings();
+    notifyListeners();
+  }
+  void setEmail(String value) {
+    _email = value;
+    _saveSettings();
+    notifyListeners();
+  }
+  void setPhone(String value) {
+    _phone = value;
+    _saveSettings();
+    notifyListeners();
+  }
+  void setAddress(String value) {
+    _address = value;
+    _saveSettings();
+    notifyListeners();
+  }
   void setDbUser(String value) {
     _dbUser = value;
     _saveSettings();
@@ -92,6 +126,9 @@ class SettingsViewModel extends ChangeNotifier {
       prefs.setString('openAiApiUrl', _openAiApiUrl);
       prefs.setString('openAiApiKey', _openAiApiKey);
       prefs.setString('idCode', _idCode);
+      prefs.setString('email', _email);
+      prefs.setString('phone', _phone);
+      prefs.setString('address', _address);
     } else {
       prefs.remove('apiUrl');
       prefs.remove('dbUser');
@@ -99,6 +136,9 @@ class SettingsViewModel extends ChangeNotifier {
       prefs.remove('openAiApiUrl');
       prefs.remove('openAiApiKey');
       prefs.remove('idCode');
+      prefs.remove('email');
+      prefs.remove('phone');
+      prefs.remove('address');
     }
   }
 
@@ -114,6 +154,10 @@ class SettingsViewModel extends ChangeNotifier {
     _openAiApiKey = prefs.getString('openAiApiKey') ?? "";
     _rememberSettings = prefs.getBool('rememberSettings') ?? false;
     _idCode = prefs.getString('idCode') ?? "";
+    _email = prefs.getString('email') ?? "";
+    _phone = prefs.getString('phone') ?? "";
+    _address = prefs.getString('address') ?? "";
+    _apiKey = prefs.getString('apiKey') ?? "";
     notifyListeners();
   }
 }

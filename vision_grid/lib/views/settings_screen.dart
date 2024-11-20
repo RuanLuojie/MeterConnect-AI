@@ -45,6 +45,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            DropdownButtonFormField<String>(
+              value: settings.meterType,
+              items: [
+                DropdownMenuItem(value: "電表", child: Text("電表")),
+                DropdownMenuItem(value: "瓦斯表", child: Text("瓦斯表")),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  settings.setMeterType(value); // 更新表類型
+                }
+              },
+              decoration: InputDecoration(
+                labelText: '表類型',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
             TextField(
               controller: apiUrlController,
               decoration: InputDecoration(labelText: 'SQL API URL'),
@@ -53,14 +72,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             SizedBox(height: 16),
             TextField(
               controller: dbUserController,
-              decoration: InputDecoration(labelText: 'Database User'),
+              decoration: InputDecoration(labelText: 'User'),
               onChanged: (value) => settings.setDbUser(value),
             ),
             SizedBox(height: 16),
             TextField(
               controller: dbPasswordController,
               decoration: InputDecoration(
-                labelText: 'Database Password',
+                labelText: 'Password',
                 suffixIcon: IconButton(
                   icon: Icon(settings.isDbPasswordVisible
                       ? Icons.visibility
