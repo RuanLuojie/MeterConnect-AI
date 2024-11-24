@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsViewModel extends ChangeNotifier {
-
   SettingsViewModel() {
-    loadSettings(); // 初始化时加载设置
+    loadSettings();
   }
 
   String _apiUrl = "https://sql-server.fly.dev/execute";
@@ -44,31 +43,37 @@ class SettingsViewModel extends ChangeNotifier {
     _saveSettings();
     notifyListeners();
   }
+
   void setApiKey(String value) {
     _apiKey = value;
     _saveSettings();
     notifyListeners();
   }
+
   void setMeterType(String value) {
     _meterType = value;
     _saveSettings();
     notifyListeners();
   }
+
   void setEmail(String value) {
     _email = value;
     _saveSettings();
     notifyListeners();
   }
+
   void setPhone(String value) {
     _phone = value;
     _saveSettings();
     notifyListeners();
   }
+
   void setAddress(String value) {
     _address = value;
     _saveSettings();
     notifyListeners();
   }
+
   void setDbUser(String value) {
     _dbUser = value;
     _saveSettings();
@@ -141,7 +146,6 @@ class SettingsViewModel extends ChangeNotifier {
       prefs.remove('address');
     }
   }
-
 
   Future<void> loadSettings() async {
     final prefs = await SharedPreferences.getInstance();

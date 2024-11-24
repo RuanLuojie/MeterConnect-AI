@@ -177,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
       settings.setDbPassword(userInfo['password']);
       settings.setEmail(userInfo['email']);
       settings.setApiKey(input);
-
+      settings.setRememberSettings(_rememberApiKey);
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       if (!autoLogin) {

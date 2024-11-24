@@ -24,7 +24,7 @@ class _CameraScreenState extends State<CameraScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cameraViewModel =
-      Provider.of<CameraViewModel>(context, listen: false);
+          Provider.of<CameraViewModel>(context, listen: false);
       availableCameras().then((cameras) {
         cameraViewModel.initializeCamera(cameras);
       });
@@ -33,7 +33,6 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 獲取當前表類型
     final settings = Provider.of<SettingsViewModel>(context, listen: false);
     final currentMeterType = settings.meterType;
 
@@ -66,13 +65,12 @@ class _CameraScreenState extends State<CameraScreen> {
                         painter: RectPainter(),
                       ),
                     ),
-                    // 顯示表類型
                     Align(
                       alignment: Alignment.topCenter,
                       child: Padding(
                         padding: const EdgeInsets.only(top: 16),
                         child: Text(
-                          "當前設定表類型：$currentMeterType",
+                          "當前設定錶類型：$currentMeterType",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -86,9 +84,9 @@ class _CameraScreenState extends State<CameraScreen> {
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 50),
                         child: Text(
-                          currentMeterType == "電表"
-                              ? "請將方框對準電表讀數"
-                              : "請將方框對準瓦斯表讀數",
+                          currentMeterType == "電錶"
+                              ? "請將方框對準電錶讀數"
+                              : "請將方框對準瓦斯錶讀數",
                           style: const TextStyle(
                               color: Colors.white, fontSize: 18),
                         ),
@@ -298,11 +296,34 @@ class _CapturedImageDialogContentState
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(recognizedText);
+                  onPressed: () async {
+                    print('確認按鈕被點擊');
+                    final cameraViewModel = Provider.of<CameraViewModel>(
+                        widget.parentContext,
+                        listen: false);
+
+                    setState(() {
+                      _isUploading = true;
+                    });
+
+                    bool uploadSuccess = await cameraViewModel.uploadImageToServer(
+                        widget.imageData, recognizedText ?? '', widget.parentContext);
+
+                    setState(() {
+                      _isUploading = false;
+                    });
+
+                    if (uploadSuccess) {
+                      print('圖片上傳成功');
+                      Navigator.of(context).pop('上傳成功');
+                    } else {
+                      print('圖片上傳失敗');
+                      Navigator.of(context).pop('上傳失敗');
+                    }
                   },
                   child: const Text('確認'),
                 ),
+
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();

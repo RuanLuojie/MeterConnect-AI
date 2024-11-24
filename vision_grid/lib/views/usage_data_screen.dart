@@ -12,7 +12,7 @@ class _UsageDataScreenState extends State<UsageDataScreen> {
   DateTime _selectedDate = DateTime.now();
 
   final List<String> _meterTypes = ['電表', '瓦斯表'];
-  final List<String> _units = ['日', '週', '月'];
+  final List<String> _units = ['日', '週', '月', '年'];
 
   String get _unitLabel => _selectedMeterType == '電表' ? 'kWh' : 'm³';
 
@@ -26,6 +26,8 @@ class _UsageDataScreenState extends State<UsageDataScreen> {
         return '${DateFormat('yyyy/MM/dd', 'zh_TW').format(startOfWeek)} - ${DateFormat('yyyy/MM/dd', 'zh_TW').format(endOfWeek)}';
       case '月':
         return DateFormat('yyyy/MM', 'zh_TW').format(date);
+      case '年':
+        return DateFormat('yyyy', 'zh_TW').format(date); // 顯示年份
       default:
         return DateFormat('yyyy/MM/dd', 'zh_TW').format(date);
     }
@@ -52,7 +54,53 @@ class _UsageDataScreenState extends State<UsageDataScreen> {
           _selectedDate = pickedMonth;
         });
       }
+    } else if (_selectedUnit == '年') {
+      final pickedYear = await showYearPicker(context, _selectedDate);
+      if (pickedYear != null) {
+        setState(() {
+          _selectedDate = pickedYear;
+        });
+      }
     }
+  }
+
+  Future<DateTime?> showYearPicker(BuildContext context, DateTime initialDate) async {
+    return showDialog<DateTime>(
+      context: context,
+      builder: (BuildContext context) {
+        int tempYear = initialDate.year;
+
+        return AlertDialog(
+          title: Text("選擇年份"),
+          content: SizedBox(
+            height: 200,
+            child: ListWheelScrollView.useDelegate(
+              itemExtent: 50,
+              childDelegate: ListWheelChildBuilderDelegate(
+                builder: (context, index) {
+                  final year = 2020 + index; // 假設年份從 2020 開始
+                  if (year > 2030) return null; // 停止於 2030
+                  return Center(
+                    child: Text('$year'),
+                  );
+                },
+              ),
+              onSelectedItemChanged: (index) {
+                tempYear = 2020 + index;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(DateTime(tempYear));
+              },
+              child: Text("確認"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<DateTime?> showMonthPicker(BuildContext context, DateTime initialDate) async {

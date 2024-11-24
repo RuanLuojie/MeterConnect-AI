@@ -15,25 +15,26 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  String _selectedMeterType = "電表"; // 預設值
+  String _selectedMeterType = "電表";
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
-    _emailController.text = settingsViewModel.email; // 自動填入電子郵箱
+    final settingsViewModel =
+        Provider.of<SettingsViewModel>(context, listen: false);
+    _emailController.text = settingsViewModel.email;
   }
 
   Future<void> _register() async {
-    final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
+    final settingsViewModel =
+        Provider.of<SettingsViewModel>(context, listen: false);
 
     if (_idCodeController.text.trim().isEmpty) {
       _showSnackBar('編號代碼為必填字段！');
       return;
     }
 
-    // 設定 ViewModel 的值
     settingsViewModel.setIdCode(_idCodeController.text.trim());
     settingsViewModel.setAddress(_addressController.text.trim());
     settingsViewModel.setPhone(_phoneController.text.trim());
@@ -75,12 +76,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       _idCodeController.clear();
       _addressController.clear();
       _phoneController.clear();
-      _selectedMeterType = "電表"; // 重置為預設值
+      _selectedMeterType = "電表";
     });
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -135,7 +137,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                 ),
                 keyboardType: TextInputType.emailAddress,
-                readOnly: true, // 設為只讀
+                readOnly: true,
               ),
               SizedBox(height: 16),
               TextField(

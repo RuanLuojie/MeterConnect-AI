@@ -6,20 +6,21 @@ import 'camera_screen.dart';
 import '../viewmodels/camera_viewmodel.dart';
 import 'settings_screen.dart';
 import '../login_screen.dart';
-import 'registration_screen.dart'; // 引入註冊界面
-import 'issue_feedback_screen.dart'; // 引入問題反饋表界面
-import 'emergency_notification_screen.dart'; // 引入緊急通知界面
-import 'usage_data_screen.dart'; // 引入使用數據界面
+import 'registration_screen.dart';
+import 'issue_feedback_screen.dart';
+import 'emergency_notification_screen.dart';
+import 'usage_data_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
-  late Timer _timer;
+  Timer? _timer;
+  DateTime? _backgroundTime;
 
   final List<String> _imagePaths = [
     'assets/images/promo1.webp',
@@ -31,22 +32,25 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _startAutoScroll();
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _stopAutoScroll();
     _pageController.dispose();
     super.dispose();
   }
 
+  /// **自動輪播**
   void _startAutoScroll() {
     _timer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
       if (_pageController.hasClients) {
         int nextPage = _pageController.page!.round() + 1;
         if (nextPage >= _imagePaths.length) {
-          nextPage = 0; // 回到第一張圖片
+          nextPage = 0;
         }
         _pageController.animateToPage(
           nextPage,
@@ -57,13 +61,40 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _stopAutoScroll() {
+    _timer?.cancel();
+  }
+
+  /// **應用程序生命週期監聽**
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _backgroundTime = DateTime.now();
+      _stopAutoScroll(); // 應用進入背景，停止自動輪播
+    } else if (state == AppLifecycleState.resumed) {
+      if (_backgroundTime != null) {
+        final duration = DateTime.now().difference(_backgroundTime!);
+        if (duration.inMinutes >= 5) {
+          // 如果超過5分鐘，返回登入畫面
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => LoginScreen()),
+                (route) => false,
+          );
+        } else {
+          _startAutoScroll(); // 繼續自動輪播
+        }
+        _backgroundTime = null;
+      }
+    }
+  }
+
+  /// **導航**
   void _navigateToPage(int index) {
+    if (index == _currentIndex) return; // 防止重複導航
     switch (index) {
       case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
+      // 首頁邏輯（可選，如果需要刷新）
         break;
       case 1:
         Navigator.push(
@@ -83,8 +114,12 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         break;
     }
+    setState(() {
+      _currentIndex = index;
+    });
   }
 
+  /// **構建UI**
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,6 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
+          // **自動輪播區域**
           Container(
             height: 180.0,
             child: PageView(
@@ -134,6 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           SizedBox(height: 20),
+          // **功能按鈕區域**
           Expanded(
             child: GridView.count(
               crossAxisCount: 2,
@@ -141,14 +178,9 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSpacing: 16.0,
               padding: EdgeInsets.all(16.0),
               children: [
-                // 註冊按鈕
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.all(16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                _buildGridButton(
+                  icon: Icons.app_registration,
+                  label: '註冊',
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -157,23 +189,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.app_registration, size: 40),
-                      SizedBox(height: 8),
-                      Text('註冊'),
-                    ],
-                  ),
                 ),
-                // 問題反饋表按鈕
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.all(16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                _buildGridButton(
+                  icon: Icons.feedback,
+                  label: '問題反饋表',
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -182,23 +201,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.feedback, size: 40),
-                      SizedBox(height: 8),
-                      Text('問題反饋表'),
-                    ],
-                  ),
                 ),
-                // 提交報告按鈕
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.all(16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                _buildGridButton(
+                  icon: Icons.bar_chart,
+                  label: '使用數據',
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -207,23 +213,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.bar_chart, size: 40),
-                      SizedBox(height: 8),
-                      Text('使用數據'),
-                    ],
-                  ),
                 ),
-                // 緊急通報按鈕
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.all(16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                _buildGridButton(
+                  icon: Icons.warning,
+                  label: '緊急通報',
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -232,14 +225,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.warning, size: 40),
-                      SizedBox(height: 8),
-                      Text('緊急通報'),
-                    ],
-                  ),
                 ),
               ],
             ),
@@ -248,12 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          _navigateToPage(index);
-        },
+        onTap: _navigateToPage,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -267,6 +247,30 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.settings),
             label: '設置',
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGridButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      onPressed: onPressed,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 40),
+          SizedBox(height: 8),
+          Text(label),
         ],
       ),
     );

@@ -7,7 +7,7 @@ class IssueFeedbackScreen extends StatefulWidget {
 
 class _IssueFeedbackScreen extends State<IssueFeedbackScreen> {
   final TextEditingController _descriptionController = TextEditingController();
-  String _selectedIssue = '系統錯誤'; // 默認問題項目
+  String _selectedIssue = '系統錯誤';
 
   final List<String> _issueItems = [
     '系統錯誤',
@@ -24,7 +24,8 @@ class _IssueFeedbackScreen extends State<IssueFeedbackScreen> {
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -95,7 +96,8 @@ class _IssueFeedbackScreen extends State<IssueFeedbackScreen> {
                     },
                     child: Text('提交'),
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -105,7 +107,8 @@ class _IssueFeedbackScreen extends State<IssueFeedbackScreen> {
                     onPressed: _clearForm,
                     child: Text('清除'),
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       backgroundColor: Colors.grey,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

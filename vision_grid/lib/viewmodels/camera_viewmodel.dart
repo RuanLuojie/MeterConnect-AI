@@ -14,7 +14,8 @@ class CameraViewModel extends ChangeNotifier {
   final OpenAIService _openAIService = OpenAIService();
   String? recognizedText;
 
-  Future<String?> recognizeNumber(Uint8List imageData, BuildContext context) async {
+  Future<String?> recognizeNumber(
+      Uint8List imageData, BuildContext context) async {
     final settings = Provider.of<SettingsViewModel>(context, listen: false);
     return await _openAIService.recognizeNumber(
       imageData,
@@ -45,6 +46,8 @@ class CameraViewModel extends ChangeNotifier {
     if (!_controller.value.isInitialized) return null;
 
     try {
+      await _controller.setFlashMode(FlashMode.off);
+
       final XFile imageFile = await _controller.takePicture();
       Uint8List imageData = await imageFile.readAsBytes();
 
@@ -61,7 +64,8 @@ class CameraViewModel extends ChangeNotifier {
         int cropWidth = rectWidth.round();
         int cropHeight = rectHeight.round();
 
-        img.Image croppedImage = CameraService.cropImage(capturedImage, cropLeft, cropTop, cropWidth, cropHeight);
+        img.Image croppedImage = CameraService.cropImage(
+            capturedImage, cropLeft, cropTop, cropWidth, cropHeight);
 
         return Uint8List.fromList(img.encodeJpg(croppedImage));
       } else {
@@ -73,16 +77,13 @@ class CameraViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> uploadImageToServer(Uint8List imageData, BuildContext context) async {
-    String base64Image = base64Encode(imageData);
+  Future<bool> uploadImageToServer(
+      Uint8List imageData, String recognizedText, BuildContext context) async {
+    final settings = Provider.of<SettingsViewModel>(context, listen: false);
     try {
-      bool uploadSuccess = await CameraService.uploadImage(base64Image, context);
+      bool uploadSuccess = await CameraService.uploadImage(
+          imageData, settings.meterType, recognizedText, context);
       print('上傳結果: $uploadSuccess');
-
-      if (!uploadSuccess) {
-        print('上傳失敗: 伺服器返回 false。');
-        return false;
-      }
 
       return uploadSuccess;
     } catch (e) {
@@ -90,6 +91,7 @@ class CameraViewModel extends ChangeNotifier {
       return false;
     }
   }
+
 
   Future<void> setExposurePoint(Offset point, Size previewSize) async {
     if (_controller.value.isInitialized) {
