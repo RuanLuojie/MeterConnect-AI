@@ -83,12 +83,18 @@ class _CameraScreenState extends State<CameraScreen> {
                       alignment: Alignment.center,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 50),
-                        child: Text(
-                          currentMeterType == "電錶"
-                              ? "請將方框對準電錶讀數"
-                              : "請將方框對準瓦斯錶讀數",
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 18),
+                        child: Consumer<SettingsViewModel>(
+                          builder: (context, settings, _) {
+                            return Text(
+                              settings.meterType == "電表"
+                                  ? "請將方框對準電錶讀數"
+                                  : "請將方框對準瓦斯錶讀數",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -249,13 +255,13 @@ class _CapturedImageDialogContentState
       );
       setState(() {
         _isUploading = false;
-        recognizedText = result ?? "無法辨識";
+        recognizedText = result;
       });
     } catch (e) {
       print('辨識過程中出現錯誤: $e');
       setState(() {
         _isUploading = false;
-        recognizedText = '辨識失敗';
+        recognizedText = null;
       });
     }
   }
@@ -278,13 +284,17 @@ class _CapturedImageDialogContentState
             ),
           ),
           const SizedBox(height: 20),
-          if (recognizedText != null)
+          if (recognizedText == null && !_isUploading)
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                "辨識結果: $recognizedText",
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                "辨識失敗，請重新拍攝或調整圖片角度。",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
           if (_isUploading)
@@ -292,46 +302,63 @@ class _CapturedImageDialogContentState
               child: CircularProgressIndicator(),
             ),
           if (!_isUploading && recognizedText != null)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () async {
-                    print('確認按鈕被點擊');
-                    final cameraViewModel = Provider.of<CameraViewModel>(
-                        widget.parentContext,
-                        listen: false);
-
-                    setState(() {
-                      _isUploading = true;
-                    });
-
-                    bool uploadSuccess = await cameraViewModel.uploadImageToServer(
-                        widget.imageData, recognizedText ?? '', widget.parentContext);
-
-                    setState(() {
-                      _isUploading = false;
-                    });
-
-                    if (uploadSuccess) {
-                      print('圖片上傳成功');
-                      Navigator.of(context).pop('上傳成功');
-                    } else {
-                      print('圖片上傳失敗');
-                      Navigator.of(context).pop('上傳失敗');
-                    }
-                  },
-                  child: const Text('確認'),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "辨識結果: $recognizedText",
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
                 ),
-
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('取消'),
-                ),
-              ],
+                textAlign: TextAlign.center,
+              ),
             ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: recognizedText != null && !_isUploading
+                    ? () async {
+                        final cameraViewModel = Provider.of<CameraViewModel>(
+                            widget.parentContext,
+                            listen: false);
+
+                        setState(() {
+                          _isUploading = true;
+                        });
+
+                        bool uploadSuccess =
+                            await cameraViewModel.uploadImageToServer(
+                          widget.imageData,
+                          recognizedText ?? '',
+                          widget.parentContext,
+                        );
+
+                        setState(() {
+                          _isUploading = false;
+                        });
+
+                        if (uploadSuccess) {
+                          print('圖片上傳成功');
+                          Navigator.of(context).pop('上傳成功');
+                        } else {
+                          print('圖片上傳失敗');
+                          Navigator.of(context).pop('上傳失敗');
+                        }
+                      }
+                    : null,
+                child: const Text('確認'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('取消'),
+              ),
+            ],
+          ),
         ],
       ),
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../viewmodels/registration_viewmodel.dart';
 import '../viewmodels/settings_viewmodel.dart';
-import '../models/registration_service.dart';
 import '../views/camera_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
@@ -15,40 +15,34 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  String _selectedMeterType = "電表";
-  bool _isLoading = false;
-
   @override
   void initState() {
     super.initState();
-    final settingsViewModel =
-        Provider.of<SettingsViewModel>(context, listen: false);
-    _emailController.text = settingsViewModel.email;
+    final registrationViewModel =
+        Provider.of<RegistrationViewModel>(context, listen: false);
+    _emailController.text = registrationViewModel.email;
   }
 
   Future<void> _register() async {
-    final settingsViewModel =
-        Provider.of<SettingsViewModel>(context, listen: false);
+    final registrationViewModel =
+        Provider.of<RegistrationViewModel>(context, listen: false);
 
     if (_idCodeController.text.trim().isEmpty) {
       _showSnackBar('編號代碼為必填字段！');
       return;
     }
 
-    settingsViewModel.setIdCode(_idCodeController.text.trim());
-    settingsViewModel.setAddress(_addressController.text.trim());
-    settingsViewModel.setPhone(_phoneController.text.trim());
-    settingsViewModel.setMeterType(_selectedMeterType);
+    registrationViewModel.setIdCode(_idCodeController.text.trim());
+    registrationViewModel.setAddress(_addressController.text.trim());
+    registrationViewModel.setPhone(_phoneController.text.trim());
 
-    setState(() => _isLoading = true);
-    final success = await RegistrationService().registerUser(settingsViewModel);
-    setState(() => _isLoading = false);
+    final result = await registrationViewModel.registerUser();
 
-    if (success) {
-      _showSnackBar('註冊成功！');
+    if (result['success'] == true) {
+      _showSnackBar(result['message']);
       _clearFields();
     } else {
-      _showSnackBar('註冊失敗，請稍後重試。');
+      _showSnackBar(result['message']);
     }
   }
 
@@ -76,7 +70,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       _idCodeController.clear();
       _addressController.clear();
       _phoneController.clear();
-      _selectedMeterType = "電表";
     });
   }
 
@@ -87,6 +80,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = Provider.of<SettingsViewModel>(context, listen: false);
+    final isLoading = Provider.of<RegistrationViewModel>(context).isLoading;
+
     return Scaffold(
       appBar: AppBar(title: Text('註冊')),
       body: Padding(
@@ -109,23 +105,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
               ),
               SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedMeterType,
-                items: [
-                  DropdownMenuItem(value: "電表", child: Text("電表")),
-                  DropdownMenuItem(value: "瓦斯表", child: Text("瓦斯表")),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedMeterType = value!;
-                  });
+              Consumer<SettingsViewModel>(
+                builder: (context, settings, _) {
+                  return DropdownButtonFormField<String>(
+                    value: settings.meterType,
+                    items: [
+                      DropdownMenuItem(value: "電表", child: Text("電表")),
+                      DropdownMenuItem(value: "瓦斯表", child: Text("瓦斯表")),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        settings.setMeterType(value);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      labelText: '表類別',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  );
                 },
-                decoration: InputDecoration(
-                  labelText: '表類別',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
               ),
               SizedBox(height: 16),
               TextField(
@@ -165,8 +165,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _register,
-                    child: _isLoading
+                    onPressed: isLoading ? null : _register,
+                    child: isLoading
                         ? CircularProgressIndicator(color: Colors.white)
                         : Text('註冊'),
                   ),

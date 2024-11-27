@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/usage_data_viewmodel.dart';
 
 class UsageDataScreen extends StatefulWidget {
   @override
@@ -7,240 +8,135 @@ class UsageDataScreen extends StatefulWidget {
 }
 
 class _UsageDataScreenState extends State<UsageDataScreen> {
-  String _selectedMeterType = '電表';
-  String _selectedUnit = '日';
-  DateTime _selectedDate = DateTime.now();
-
-  final List<String> _meterTypes = ['電表', '瓦斯表'];
-  final List<String> _units = ['日', '週', '月', '年'];
-
-  String get _unitLabel => _selectedMeterType == '電表' ? 'kWh' : 'm³';
-
-  String _formatDate(DateTime date) {
-    switch (_selectedUnit) {
-      case '日':
-        return DateFormat('yyyy/MM/dd', 'zh_TW').format(date);
-      case '週':
-        final startOfWeek = date.subtract(Duration(days: date.weekday - 1));
-        final endOfWeek = startOfWeek.add(Duration(days: 6));
-        return '${DateFormat('yyyy/MM/dd', 'zh_TW').format(startOfWeek)} - ${DateFormat('yyyy/MM/dd', 'zh_TW').format(endOfWeek)}';
-      case '月':
-        return DateFormat('yyyy/MM', 'zh_TW').format(date);
-      case '年':
-        return DateFormat('yyyy', 'zh_TW').format(date); // 顯示年份
-      default:
-        return DateFormat('yyyy/MM/dd', 'zh_TW').format(date);
-    }
-  }
-
-  Future<void> _pickDate() async {
-    if (_selectedUnit == '日') {
-      final pickedDate = await showDatePicker(
-        context: context,
-        initialDate: _selectedDate,
-        firstDate: DateTime(2020),
-        lastDate: DateTime(2030),
-      );
-
-      if (pickedDate != null) {
-        setState(() {
-          _selectedDate = pickedDate;
-        });
-      }
-    } else if (_selectedUnit == '月') {
-      final pickedMonth = await showMonthPicker(context, _selectedDate);
-      if (pickedMonth != null) {
-        setState(() {
-          _selectedDate = pickedMonth;
-        });
-      }
-    } else if (_selectedUnit == '年') {
-      final pickedYear = await showYearPicker(context, _selectedDate);
-      if (pickedYear != null) {
-        setState(() {
-          _selectedDate = pickedYear;
-        });
-      }
-    }
-  }
-
-  Future<DateTime?> showYearPicker(BuildContext context, DateTime initialDate) async {
-    return showDialog<DateTime>(
-      context: context,
-      builder: (BuildContext context) {
-        int tempYear = initialDate.year;
-
-        return AlertDialog(
-          title: Text("選擇年份"),
-          content: SizedBox(
-            height: 200,
-            child: ListWheelScrollView.useDelegate(
-              itemExtent: 50,
-              childDelegate: ListWheelChildBuilderDelegate(
-                builder: (context, index) {
-                  final year = 2020 + index; // 假設年份從 2020 開始
-                  if (year > 2030) return null; // 停止於 2030
-                  return Center(
-                    child: Text('$year'),
-                  );
-                },
-              ),
-              onSelectedItemChanged: (index) {
-                tempYear = 2020 + index;
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(DateTime(tempYear));
-              },
-              child: Text("確認"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<DateTime?> showMonthPicker(BuildContext context, DateTime initialDate) async {
-    return showDialog<DateTime>(
-      context: context,
-      builder: (BuildContext context) {
-        DateTime tempDate = initialDate;
-
-        return AlertDialog(
-          title: Text("選擇月份"),
-          content: SizedBox(
-            height: 200,
-            child: ListWheelScrollView.useDelegate(
-              itemExtent: 50,
-              childDelegate: ListWheelChildBuilderDelegate(
-                builder: (context, index) {
-                  if (index < 0 || index >= 12) return null;
-                  final month = DateTime(initialDate.year, index + 1, 1);
-                  return Center(
-                    child: Text(DateFormat('MMMM', 'zh_TW').format(month)),
-                  );
-                },
-              ),
-              onSelectedItemChanged: (index) {
-                tempDate = DateTime(initialDate.year, index + 1, 1);
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(tempDate);
-              },
-              child: Text("確認"),
-            ),
-          ],
-        );
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final usageDataViewModel =
+          Provider.of<UsageDataViewModel>(context, listen: false);
+      usageDataViewModel.fetchUsageData(context);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('使用數據'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '數據篩選',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _selectedMeterType,
-              items: _meterTypes.map((String item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child: Text(item),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedMeterType = value!;
-                });
-              },
-              decoration: InputDecoration(
-                labelText: '選擇表類型',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+    return Consumer<UsageDataViewModel>(
+      builder: (context, viewModel, _) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('使用數據'),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '數據篩選',
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-              ),
-            ),
-            SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _selectedUnit,
-              items: _units.map((String unit) {
-                return DropdownMenuItem<String>(
-                  value: unit,
-                  child: Text(unit),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedUnit = value!;
-                });
-              },
-              decoration: InputDecoration(
-                labelText: '選擇單位',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-            GestureDetector(
-              onTap: _pickDate,
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '選擇日期: ${_formatDate(_selectedDate)}',
-                      style: TextStyle(fontSize: 16),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: viewModel.selectedMeterType,
+                  items: viewModel.meterTypes.map((String item) {
+                    return DropdownMenuItem<String>(
+                      value: item,
+                      child: Text(item),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) viewModel.setSelectedMeterType(value);
+                  },
+                  decoration: InputDecoration(
+                    labelText: '選擇表類型',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    Icon(Icons.calendar_today),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: viewModel.selectedUnit,
+                  items: viewModel.units.map((String unit) {
+                    return DropdownMenuItem<String>(
+                      value: unit,
+                      child: Text(unit),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) viewModel.setSelectedUnit(value);
+                  },
+                  decoration: InputDecoration(
+                    labelText: '選擇單位',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: () => viewModel.pickDate(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '篩選日期: ${viewModel.formatDate(viewModel.selectedDate)} (${viewModel.selectedUnit})',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const Icon(Icons.calendar_today),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+                Text(
+                  '數據結果',
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: viewModel.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : viewModel.usageData.isEmpty
+                          ? const Center(
+                              child: Text(
+                                '未找到相關數據',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: viewModel.usageData.length,
+                              separatorBuilder: (context, index) =>
+                                  const Divider(),
+                              itemBuilder: (context, index) {
+                                final item = viewModel.usageData[index];
+                                return ListTile(
+                                  title: Text('讀數: ${item['recognized_text']}'),
+                                  subtitle:
+                                      Text('時間: ${item['captured_time']}'),
+                                  trailing: Text(
+                                    viewModel.unitLabel,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                );
+                              },
+                            ),
+                ),
+              ],
             ),
-            SizedBox(height: 24),
-            Text(
-              '數據結果',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Expanded(
-              child: ListView.separated(
-                itemCount: 10,
-                separatorBuilder: (context, index) => Divider(),
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text('數據項目 ${index + 1}'),
-                    subtitle: Text('數據內容 ${index * 100} $_unitLabel'),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

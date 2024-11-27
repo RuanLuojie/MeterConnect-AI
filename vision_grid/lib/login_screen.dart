@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _rememberApiKey = savedRememberApiKey;
       if (_rememberApiKey) {
-        _apiKeyController.text = savedApiKey; // 加载并显示 API Key
+        _apiKeyController.text = savedApiKey;
       }
     });
   }
@@ -130,16 +130,16 @@ class _LoginScreenState extends State<LoginScreen> {
               _isLoading
                   ? CircularProgressIndicator()
                   : ElevatedButton(
-                onPressed: _handleLogin,
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding:
-                  EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                child: Text('登入'),
-              ),
+                      onPressed: _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      ),
+                      child: Text('登入'),
+                    ),
             ],
           ),
         ),
@@ -189,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<Map<String, dynamic>?> _verifyApiKeyAndGetUserInfo(
       String apiKey) async {
     final url =
-    Uri.parse("https://sql-sever-v3api.fly.dev/api/SqlApi/user-info");
+        Uri.parse("https://sql-sever-v3api.fly.dev/api/SqlApi/user-info");
 
     try {
       final response = await http.get(url, headers: {'X-API-KEY': apiKey});

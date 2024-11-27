@@ -53,7 +53,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
               onChanged: (value) {
                 if (value != null) {
-                  settings.setMeterType(value); // 更新表類型
+                  settings.setMeterType(value);
                 }
               },
               decoration: InputDecoration(

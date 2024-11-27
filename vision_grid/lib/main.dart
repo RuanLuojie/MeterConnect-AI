@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 import 'views/home_screen.dart';
 import 'views/themes.dart';
 import 'viewmodels/settings_viewmodel.dart';
-import 'login_screen.dart';
+import 'viewmodels/registration_viewmodel.dart';
 import 'viewmodels/camera_viewmodel.dart';
+import 'viewmodels/usage_data_viewmodel.dart';
+import 'login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +22,10 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => settingsViewModel),
         ChangeNotifierProvider(create: (_) => CameraViewModel()),
+        ChangeNotifierProvider(create: (_) => UsageDataViewModel()),
+        ChangeNotifierProvider(
+          create: (_) => RegistrationViewModel(settingsViewModel),
+        ),
       ],
       child: MyApp(),
     ),

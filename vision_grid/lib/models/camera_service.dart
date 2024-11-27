@@ -6,8 +6,8 @@ import 'package:image/image.dart' as img;
 import '../viewmodels/settings_viewmodel.dart';
 
 class CameraService {
-  static Future<bool> uploadImage(
-      Uint8List imageData, String meterType, String recognizedText, BuildContext context) async {
+  static Future<bool> uploadImage(Uint8List imageData, String meterType,
+      String recognizedText, BuildContext context) async {
     final settings = Provider.of<SettingsViewModel>(context, listen: false);
 
     try {
@@ -21,11 +21,9 @@ class CameraService {
         "X-API-KEY": settings.apiKey,
       });
 
-      // 添加表單欄位
       request.fields['meterType'] = meterType;
       request.fields['recognizedText'] = recognizedText;
 
-      // 添加圖片檔案
       request.files.add(
         http.MultipartFile.fromBytes(
           'file',
@@ -49,7 +47,6 @@ class CameraService {
       return false;
     }
   }
-
 
   static img.Image cropImage(img.Image capturedImage, int cropLeft, int cropTop,
       int cropWidth, int cropHeight) {

@@ -6,7 +6,7 @@ class RegistrationService {
   static const String apiEndpoint =
       'https://sql-sever-v3api.fly.dev/api/SqlApi/send-email';
 
-  Future<bool> registerUser(SettingsViewModel settingsViewModel) async {
+  Future<Map<String, dynamic>> registerUser(SettingsViewModel settingsViewModel) async {
     try {
       final apiKey = settingsViewModel.apiKey;
       final email = settingsViewModel.email.trim();
@@ -14,14 +14,22 @@ class RegistrationService {
       final meterType = settingsViewModel.meterType.trim();
 
       if (email.isEmpty || idCode.isEmpty || meterType.isEmpty) {
-        print("數據不完整：email=$email, idCode=$idCode, meterType=$meterType");
-        return false;
+        return {
+          'success': false,
+          'message': "數據不完整：email=$email, idCode=$idCode, meterType=$meterType"
+        };
       }
+
+      final meterTypeMapping = {
+        "電表": "electric",
+        "瓦斯表": "gas",
+      };
+      final mappedMeterType = meterTypeMapping[meterType] ?? meterType;
 
       final payload = {
         "toEmail": email,
         "userIdCode": idCode,
-        "meterType": meterType,
+        "meterType": mappedMeterType,
       };
 
       final body = jsonEncode(payload);
@@ -41,15 +49,21 @@ class RegistrationService {
       );
 
       if (response.statusCode == 200) {
-        print("註冊成功！");
-        return true;
+        return {'success': true, 'message': "註冊成功！"};
       } else {
-        print("註冊失敗：${response.statusCode} ${response.body}");
-        return false;
+        final errorMessage = jsonDecode(response.body)['error'] ?? '未知錯誤';
+        return {
+          'success': false,
+          'message': "註冊失敗：$errorMessage",
+          'statusCode': response.statusCode
+        };
       }
     } catch (e) {
-      print("註冊時發生錯誤：$e");
-      return false;
+      return {
+        'success': false,
+        'message': "註冊時發生錯誤：$e",
+      };
     }
   }
+
 }
