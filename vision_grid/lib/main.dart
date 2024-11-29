@@ -22,6 +22,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => settingsViewModel),
         ChangeNotifierProvider(create: (_) => CameraViewModel()),
+        ChangeNotifierProvider(create: (_) => CameraViewModel()),
         ChangeNotifierProvider(create: (_) => UsageDataViewModel()),
         ChangeNotifierProvider(
           create: (_) => RegistrationViewModel(settingsViewModel),

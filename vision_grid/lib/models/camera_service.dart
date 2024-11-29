@@ -11,6 +11,8 @@ class CameraService {
     final settings = Provider.of<SettingsViewModel>(context, listen: false);
 
     try {
+      String normalizedMeterType = meterType == "電表" ? "electric" : "gas";
+
       final request = http.MultipartRequest(
         'POST',
         Uri.parse("https://sql-sever-v3api.fly.dev/api/SqlApi/upload-image"),
@@ -21,7 +23,7 @@ class CameraService {
         "X-API-KEY": settings.apiKey,
       });
 
-      request.fields['meterType'] = meterType;
+      request.fields['meterType'] = normalizedMeterType;
       request.fields['recognizedText'] = recognizedText;
 
       request.files.add(

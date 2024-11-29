@@ -342,10 +342,10 @@ class _CapturedImageDialogContentState
 
                         if (uploadSuccess) {
                           print('圖片上傳成功');
-                          Navigator.of(context).pop('上傳成功');
+                          Navigator.of(context).pop(recognizedText);
                         } else {
                           print('圖片上傳失敗');
-                          Navigator.of(context).pop('上傳失敗');
+                          Navigator.of(context).pop(null);
                         }
                       }
                     : null,

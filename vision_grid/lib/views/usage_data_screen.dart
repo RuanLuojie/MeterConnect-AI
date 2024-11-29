@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/usage_data_viewmodel.dart';
+import 'package:intl/intl.dart';
 
 class UsageDataScreen extends StatefulWidget {
   @override
@@ -107,31 +108,44 @@ class _UsageDataScreenState extends State<UsageDataScreen> {
                   child: viewModel.isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : viewModel.usageData.isEmpty
-                          ? const Center(
-                              child: Text(
-                                '未找到相關數據',
-                                style: TextStyle(fontSize: 16),
+                      ? const Center(
+                    child: Text(
+                      '未找到相關數據',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  )
+                      : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 數據結果列表
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: viewModel.usageData.length,
+                          separatorBuilder: (context, index) => const Divider(),
+                          itemBuilder: (context, index) {
+                            final item = viewModel.usageData[index];
+                            return ListTile(
+                              title: Text(
+                                  '讀數: ${item['recognized_text']} ${viewModel.unitLabel}'),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('時間: ${viewModel.formatCapturedTime(item['captured_time'])}'),
+                                  Text('表類型: ${viewModel.selectedMeterType}'),
+                                  if (index > 0)
+                                    Text(
+                                      '用量 : ${(int.parse(item['recognized_text']) - int.parse(viewModel.usageData[index - 1]['recognized_text'])).abs()} ${viewModel.unitLabel}',
+                                    ),
+                                ],
                               ),
-                            )
-                          : ListView.separated(
-                              itemCount: viewModel.usageData.length,
-                              separatorBuilder: (context, index) =>
-                                  const Divider(),
-                              itemBuilder: (context, index) {
-                                final item = viewModel.usageData[index];
-                                return ListTile(
-                                  title: Text('讀數: ${item['recognized_text']}'),
-                                  subtitle:
-                                      Text('時間: ${item['captured_time']}'),
-                                  trailing: Text(
-                                    viewModel.unitLabel,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                );
-                              },
-                            ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+
               ],
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../viewmodels/registration_viewmodel.dart';
 import '../viewmodels/settings_viewmodel.dart';
 import '../views/camera_screen.dart';
+import '../viewmodels/camera_viewmodel.dart';
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -47,6 +48,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Future<void> _captureIdCode() async {
+    final cameraViewModel = Provider.of<CameraViewModel>(context, listen: false);
+
+    // 設定辨識模式
+    cameraViewModel.setRecognitionMode(true);
+
+    // 進入相機頁面
     String? recognizedText = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -56,6 +63,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
     );
 
+    // 回復普通模式
+    cameraViewModel.setRecognitionMode(false);
+
+    // 處理辨識結果
     if (recognizedText != null && recognizedText.isNotEmpty) {
       setState(() {
         _idCodeController.text = recognizedText;

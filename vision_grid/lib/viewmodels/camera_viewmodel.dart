@@ -7,12 +7,21 @@ import 'package:provider/provider.dart';
 import '../viewmodels/settings_viewmodel.dart';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
-import 'dart:convert';
 
 class CameraViewModel extends ChangeNotifier {
   late CameraController _controller;
   final OpenAIService _openAIService = OpenAIService();
   String? recognizedText;
+
+  // 狀態：是否為辨識模式
+  bool _isRecognitionMode = false;
+
+  bool get isRecognitionMode => _isRecognitionMode;
+
+  void setRecognitionMode(bool value) {
+    _isRecognitionMode = value;
+    notifyListeners();
+  }
 
   Future<String?> recognizeNumber(
       Uint8List imageData, BuildContext context) async {
@@ -78,19 +87,41 @@ class CameraViewModel extends ChangeNotifier {
   }
 
   Future<bool> uploadImageToServer(
-      Uint8List imageData, String recognizedText, BuildContext context) async {
+      Uint8List imageData,
+      String recognizedText,
+      BuildContext context,
+      ) async {
     final settings = Provider.of<SettingsViewModel>(context, listen: false);
-    try {
-      bool uploadSuccess = await CameraService.uploadImage(
-          imageData, settings.meterType, recognizedText, context);
-      print('上傳結果: $uploadSuccess');
 
-      return uploadSuccess;
+    try {
+      if (_isRecognitionMode) {
+        // 辨識模式，僅執行辨識
+        print('辨識模式啟用，進行文字辨識...');
+        recognizedText = await recognizeNumber(imageData, context) ?? '';
+        if (recognizedText.isEmpty) {
+          print('辨識失敗，未能獲取結果。');
+          return false;
+        }
+        print('辨識成功，結果：$recognizedText');
+        return true;
+      } else {
+        // 普通模式，執行上傳
+        print('普通模式啟用，進行圖片上傳...');
+        bool uploadSuccess = await CameraService.uploadImage(
+          imageData,
+          settings.meterType,
+          recognizedText,
+          context,
+        );
+        print('上傳結果: $uploadSuccess');
+        return uploadSuccess;
+      }
     } catch (e) {
-      print('上傳失敗，錯誤: $e');
+      print('處理失敗，錯誤: $e');
       return false;
     }
   }
+
 
 
   Future<void> setExposurePoint(Offset point, Size previewSize) async {

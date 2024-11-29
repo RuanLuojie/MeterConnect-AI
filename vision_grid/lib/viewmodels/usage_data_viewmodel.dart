@@ -42,6 +42,16 @@ class UsageDataViewModel with ChangeNotifier {
     }
   }
 
+  String formatCapturedTime(String capturedTime) {
+    try {
+      final DateTime parsedTime = DateTime.parse(capturedTime);
+      return DateFormat('yyyy/MM/dd-HH:mm', 'zh_TW').format(parsedTime); // 自定義格式
+    } catch (e) {
+      print('時間格式化失敗: $e');
+      return capturedTime; // 格式化失敗時回傳原始時間字串
+    }
+  }
+
   void setSelectedMeterType(String value) {
     _selectedMeterType = value;
     _filterData();
