@@ -5,16 +5,74 @@
 
 @model List<MeterRecord>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   
+</head>
+<body onload="ShowRecortChart();">
+    <div>
+        <h2>電表數據統計</h2>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item active" style="color:white;">
+                <strong>電表查詢-電表數據統計</strong>
+            </li>
+        </ol>
+    </div>
 
-<div>
-    <h2>電表數據統計</h2>
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item active" style="color:white;">
-            <strong>電表查詢-電表數據統計</strong>
-        </li>
-    </ol>
-</div>
+    <div id="recordChart"></div>
+    <script>
+        function ShowRecortChart() { 
+            Highcharts.chart('recordChart', {
+                chart: {
+                    type: 'line'
+                },
+                title: {
+                    text: '電表用量數據統計'
+                }
+                ,
+                subtitle: {
+                    text: 'Source: ' +
+                        '<a href="https://en.wikipedia.org/wiki/List_of_cities_by_average_temperature" ' +
+                        'target="_blank">Wikipedia.com</a>'
+                },
+                xAxis: {
+                    categories: [
+                        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+                        'Oct', 'Nov', 'Dec'
+                    ]
+                },
+                yAxis: {
+                    title: {
+                        text: '使用電量'
+                    }
+                },
+                plotOptions: {
+                    line: {
+                        dataLabels: {
+                            enabled: true
+                        },
+                        enableMouseTracking: false
+                    }
+                },
+                series: [{
+                    name: '電表',
+                    data: [
+                        16.0, 18.2, 23.1, 27.9, 32.2, 36.4, 39.8, 38.4, 35.5, 29.2,
+                        22.0, 17.8
+                    ]
+                }, {
+                    name: '瓦斯表',
+                    data: [
+                        -2.9, -3.6, -0.6, 4.8, 10.2, 14.5, 17.6, 16.5, 12.0, 6.5,
+                        2.0, -0.9
+                    ]
+                }]
+            });
+        }
+    </script>
+</body>
+</html>
 
-<div class="">
-
-</div>
