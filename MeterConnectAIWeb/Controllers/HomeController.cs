@@ -14,9 +14,15 @@ namespace MeterConnectAIWeb.Controllers
             _FlyIoSqlServer = service;
         }
 
-        public async Task<IActionResult> Home()
+        public IActionResult Dashboard() 
+        { 
+            return View();
+        }
+
+        public IActionResult Home()
         {
-            List<MeterRecord> meterRecords = await _FlyIoSqlServer.GetMeterRecord("OOXXOOXXOO");
+
+
             return View();
         }
     }

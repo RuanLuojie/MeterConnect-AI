@@ -95,11 +95,36 @@
     <!-- Sidebar -->
     <div id="sidebar">
         <ul>
-            <li><a href="#"><i class="fas fa-home"></i><span>Home</span></a></li>
-            <li><a href="#"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
-            <li><a href="#"><i class="fas fa-user"></i><span>Profile</span></a></li>
-            <li><a href="#"><i class="fas fa-cogs"></i><span>Settings</span></a></li>
-            <li><a href="#"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+            <li>
+                <a asp-action="Home" asp-controller="Home">
+                    <i class="fas fa-home"/></i>
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a asp-action="Dashboard" asp-controller="Home">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a asp-action="Home" asp-controller="Home">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+            <li>
+                <a asp-action="Home" asp-controller="Home">
+                    <i class="fas fa-cogs"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+            <li>
+                <a asp-action="Home" asp-controller="Home">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
         </ul>
     </div>
 
